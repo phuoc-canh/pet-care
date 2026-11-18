@@ -12,6 +12,7 @@ import { strings } from '@/constants/strings';
 import { useDeletePet, usePet } from '@/hooks/services/usePets';
 import { haptic } from '@/hooks/useHaptic';
 import { useAppStore } from '@/store/app.store';
+import { useChatStore } from '@/store/chat.store';
 import { colors, spacing } from '@/theme/theme';
 import { formatAge, formatWeight } from '@/utils/format';
 
@@ -35,6 +36,7 @@ export default function PetDetail() {
   const { data: pet, isPending, isError, error, refetch } = usePet(id);
   const deletePet = useDeletePet();
   const selectPet = useAppStore((s) => s.selectPet);
+  const clearChat = useChatStore((s) => s.clear);
   const [confirmVisible, setConfirmVisible] = useState(false);
 
   const goBack = useCallback(() => (router.canGoBack() ? router.back() : router.replace('/')), [router]);
@@ -54,10 +56,13 @@ export default function PetDetail() {
   const confirmDelete = useCallback(() => {
     if (!id) return;
     // Optimistic: danh sách cập nhật ngay, đóng màn luôn; nếu lỗi hook tự rollback.
-    deletePet.mutateAsync(id).then(haptic.success, haptic.error);
+    deletePet.mutateAsync(id).then(() => {
+      haptic.success();
+      clearChat(id);
+    }, haptic.error);
     setConfirmVisible(false);
     goBack();
-  }, [deletePet, goBack, id]);
+  }, [clearChat, deletePet, goBack, id]);
 
   return (
     <View style={[styles.root, { paddingTop: insets.top }]}>
