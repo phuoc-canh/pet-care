@@ -125,11 +125,6 @@ export default function Onboarding() {
         <AppText variant="subtitle" tone="primary">
           🐾 {t('common.appName')}
         </AppText>
-        {!isLast ? (
-          <Button title={t('onboarding.skip')} variant="ghost" fullWidth={false} onPress={finish} />
-        ) : (
-          <View style={styles.skipPlaceholder} />
-        )}
       </View>
 
       <AnimatedFlatList
@@ -156,6 +151,10 @@ export default function Onboarding() {
           ))}
         </View>
         <Button title={isLast ? t('onboarding.start') : t('onboarding.next')} onPress={next} />
+        {/* "Bỏ qua" ở dưới (không ở góc trên phải — vùng iOS giữ cho cử chỉ hệ thống). */}
+        <View style={styles.skipSlot}>
+          {!isLast ? <Button title={t('onboarding.skip')} variant="ghost" onPress={finish} /> : null}
+        </View>
       </View>
     </View>
   );
@@ -170,7 +169,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.lg,
     minHeight: 52,
   },
-  skipPlaceholder: { height: 52 },
+  skipSlot: { height: 52, marginTop: -spacing.sm },
   list: { flex: 1 },
   language: { marginTop: spacing.md },
   slide: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: spacing.xl, gap: spacing.md },

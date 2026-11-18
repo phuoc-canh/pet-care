@@ -103,7 +103,11 @@ export default function Chat() {
 
   const openSwitcher = useCallback(() => setSwitcherOpen(true), []);
   const closeSwitcher = useCallback(() => setSwitcherOpen(false), []);
-  const openClear = useCallback(() => setConfirmClear(true), []);
+  const openClear = useCallback(() => {
+    setSwitcherOpen(false);
+    // iOS không mở được Modal mới khi Modal cũ đang đóng → đợi sheet đóng xong.
+    setTimeout(() => setConfirmClear(true), 350);
+  }, []);
   const closeClear = useCallback(() => setConfirmClear(false), []);
   const doClear = useCallback(() => {
     clear();
@@ -144,9 +148,7 @@ export default function Chat() {
       <ChatHeader
         pet={pet}
         offline={offlineReason !== null}
-        canClear={messages.length > 0}
         onSwitchPet={openSwitcher}
-        onClear={openClear}
       />
 
       <KeyboardAvoidingView
@@ -232,6 +234,7 @@ export default function Chat() {
         selectedId={pet.id}
         onSelect={selectPet}
         onClose={closeSwitcher}
+        onClear={messages.length > 0 ? openClear : undefined}
       />
       <DialogConfirm
         visible={confirmClear}

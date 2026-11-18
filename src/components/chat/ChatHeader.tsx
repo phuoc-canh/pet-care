@@ -3,7 +3,7 @@ import { memo } from 'react';
 import { StyleSheet, View } from 'react-native';
 import Animated, { FadeIn, FadeOut } from 'react-native-reanimated';
 
-import { AppText, Avatar, IconButton, Pill, PressableScale } from '@/components/ui';
+import { AppText, Avatar, Pill, PressableScale } from '@/components/ui';
 import { useTranslation } from 'react-i18next';
 import { colors, layout, spacing } from '@/theme/theme';
 import type { Pet } from '@/types/services-type/pet.type';
@@ -11,12 +11,10 @@ import type { Pet } from '@/types/services-type/pet.type';
 export interface ChatHeaderProps {
   pet: Pet;
   offline: boolean;
-  canClear: boolean;
   onSwitchPet: () => void;
-  onClear: () => void;
 }
 
-function ChatHeaderBase({ pet, offline, canClear, onSwitchPet, onClear }: ChatHeaderProps) {
+function ChatHeaderBase({ pet, offline, onSwitchPet }: ChatHeaderProps) {
   const { t } = useTranslation();
   return (
     <View style={styles.container}>
@@ -45,9 +43,6 @@ function ChatHeaderBase({ pet, offline, canClear, onSwitchPet, onClear }: ChatHe
           <Animated.View entering={FadeIn} exiting={FadeOut} accessibilityLiveRegion="polite">
             <Pill label={t('chat.offline')} tone="warning" icon="cloud-offline" />
           </Animated.View>
-        ) : null}
-        {canClear ? (
-          <IconButton icon="trash-outline" variant="plain" onPress={onClear} accessibilityLabel={t('chat.clear')} />
         ) : null}
       </View>
     </View>

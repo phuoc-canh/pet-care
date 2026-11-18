@@ -137,15 +137,16 @@ export default function AppointmentBook() {
   return (
     <View style={[styles.root, { paddingTop: topPad }]}>
       <View style={styles.headerRow}>
+        {/* Nút đóng/quay lại bên TRÁI như modal chuẩn iOS (góc trên phải dễ bị iOS giữ chạm). */}
         {step === 'confirm' ? (
           <IconButton icon="chevron-back" onPress={goSelect} accessibilityLabel={t('appointment.edit')} />
         ) : (
-          <View style={styles.headerSpacer} />
+          <IconButton icon="close" onPress={close} accessibilityLabel={t('common.close')} />
         )}
         <AppText variant="subtitle" accessibilityRole="header">
           {step === 'confirm' ? t('appointment.summaryTitle') : t('appointment.bookTitle')}
         </AppText>
-        <IconButton icon="close" onPress={close} accessibilityLabel={t('common.close')} />
+        <View style={styles.headerSpacer} />
       </View>
 
       {step === 'select' ? (

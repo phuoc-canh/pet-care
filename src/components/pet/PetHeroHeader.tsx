@@ -20,17 +20,15 @@ function PetHeroHeaderBase({ petName, onLanguagePress, children }: PetHeroHeader
   const { t } = useTranslation();
   const insets = useSafeAreaInsets();
   return (
-    <LinearGradient colors={colors.heroGradientToBg} locations={GRADIENT_STOPS} style={[styles.container, { paddingTop: insets.top + spacing.xl }]}>
+    <LinearGradient colors={colors.heroGradientToBg} locations={GRADIENT_STOPS} style={[styles.container, { paddingTop: insets.top + spacing.md }]}>
       <View style={styles.text}>
-        <View style={styles.topRow}>
-          <AppText variant="body" tone="secondary" style={styles.greeting}>
-            {t('pet.home.greeting')}
-          </AppText>
-          {onLanguagePress ? (
-            <IconButton icon="globe-outline" onPress={onLanguagePress} accessibilityLabel={t('language.change')} />
-          ) : null}
-        </View>
-        <AppText variant="heading" tone="navy" accessibilityRole="header">
+        <AppText variant="body" tone="secondary" style={styles.greeting}>
+          {t('pet.home.greeting')}
+        </AppText>
+        {/* Nút 🌐 đặt ngang tiêu đề lớn (không ở góc trên phải): trên iPhone tai thỏ, vùng sát mép
+            trên bên phải bị iOS giữ cho cử chỉ hệ thống nên chạm không ổn định. */}
+        <View style={styles.titleRow}>
+        <AppText variant="heading" tone="navy" accessibilityRole="header" style={styles.title}>
           {petName ? (
             <>
               {t('pet.home.howIsBefore')}
@@ -43,6 +41,10 @@ function PetHeroHeaderBase({ petName, onLanguagePress, children }: PetHeroHeader
             t('common.appName')
           )}
         </AppText>
+        {onLanguagePress ? (
+          <IconButton icon="globe-outline" onPress={onLanguagePress} accessibilityLabel={t('language.change')} />
+        ) : null}
+        </View>
       </View>
       {children}
     </LinearGradient>
@@ -54,6 +56,7 @@ export const PetHeroHeader = memo(PetHeroHeaderBase);
 const styles = StyleSheet.create({
   container: { paddingBottom: spacing.lg, gap: spacing.lg },
   text: { paddingHorizontal: spacing.lg, gap: spacing.xxs },
-  topRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', minHeight: 44 },
+  titleRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
+  title: { flex: 1 },
   greeting: { fontWeight: '600' },
 });

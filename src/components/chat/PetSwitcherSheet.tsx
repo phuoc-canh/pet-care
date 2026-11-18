@@ -44,10 +44,12 @@ export interface PetSwitcherSheetProps {
   selectedId: string | undefined;
   onSelect: (id: string) => void;
   onClose: () => void;
+  /** Có thì hiện dòng "Xóa cuộc trò chuyện" (thay cho nút 🗑 ở góc trên phải header). */
+  onClear?: () => void;
 }
 
 /** Bottom sheet chọn thú cưng ngay tại header chat. */
-function PetSwitcherSheetBase({ visible, pets, selectedId, onSelect, onClose }: PetSwitcherSheetProps) {
+function PetSwitcherSheetBase({ visible, pets, selectedId, onSelect, onClose, onClear }: PetSwitcherSheetProps) {
   const { t } = useTranslation();
   const pick = useCallback(
     (id: string) => {
@@ -65,6 +67,19 @@ function PetSwitcherSheetBase({ visible, pets, selectedId, onSelect, onClose }: 
           <Row key={p.id} pet={p} selected={p.id === selectedId} onPick={pick} />
         ))}
       </View>
+      {onClear ? (
+        <PressableScale
+          onPress={onClear}
+          accessibilityRole="button"
+          accessibilityLabel={t('chat.clear')}
+          style={styles.clearRow}
+        >
+          <Ionicons name="trash-outline" size={20} color={colors.danger} />
+          <AppText variant="bodyStrong" tone="danger">
+            {t('chat.clear')}
+          </AppText>
+        </PressableScale>
+      ) : null}
     </BottomSheet>
   );
 }
@@ -85,5 +100,15 @@ const styles = StyleSheet.create({
     borderColor: colors.surface,
   },
   rowSelected: { borderColor: colors.primary },
+  clearRow: {
+    minHeight: layout.minTouch + 8,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: spacing.xs,
+    marginTop: spacing.md,
+    borderRadius: radius.button,
+    backgroundColor: colors.dangerSoft,
+  },
   rowText: { flex: 1, gap: 2 },
 });

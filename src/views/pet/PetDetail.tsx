@@ -72,7 +72,7 @@ export default function PetDetail() {
         <AppText variant="subtitle" accessibilityRole="header">
           {t('pet.detail.title')}
         </AppText>
-        <IconButton icon="create-outline" onPress={goEdit} accessibilityLabel={t('pet.detail.edit')} disabled={!pet} />
+        <View style={styles.topBarSpacer} />
       </View>
 
       {isPending ? (
@@ -136,6 +136,7 @@ export default function PetDetail() {
 
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: colors.background },
+  topBarSpacer: { width: 44 },
   topBar: {
     flexDirection: 'row',
     alignItems: 'center',

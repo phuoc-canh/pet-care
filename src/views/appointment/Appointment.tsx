@@ -4,7 +4,7 @@ import { FlatList, type ListRenderItem, RefreshControl, StyleSheet, View } from 
 
 import { AppointmentListItem } from '@/components/appointment/AppointmentListItem';
 import { DialogConfirm } from '@/components/common/DialogConfirm';
-import { AppText, Button, EmptyState, ErrorState, IconButton, Screen, Skeleton } from '@/components/ui';
+import { AppText, Button, EmptyState, ErrorState, Screen, Skeleton } from '@/components/ui';
 import { useTranslation } from 'react-i18next';
 import { useAppointments, useCancelAppointment } from '@/hooks/services/useAppointments';
 import { haptic } from '@/hooks/useHaptic';
@@ -63,7 +63,6 @@ export default function Appointment() {
           {t('appointment.subtitle')}
         </AppText>
       </View>
-      <IconButton icon="add" variant="primary" onPress={goBook} accessibilityLabel={t('appointment.book')} />
     </View>
   );
 
