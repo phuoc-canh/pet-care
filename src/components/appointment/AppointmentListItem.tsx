@@ -6,7 +6,7 @@ import Animated, { FadeIn, LinearTransition, type SharedValue, useAnimatedStyle,
 
 import { AppText, Card, PressableScale } from '@/components/ui';
 import { SERVICE_MAP } from '@/constants/appointment';
-import { strings } from '@/constants/strings';
+import { useTranslation } from 'react-i18next';
 import { haptic } from '@/hooks/useHaptic';
 import { colors, radius, spacing } from '@/theme/theme';
 import type { Appointment } from '@/types/services-type/appointment.type';
@@ -15,16 +15,17 @@ import { formatDateLong, formatDayMonth, formatVnd, fromDateKey, weekdayShort } 
 const ACTION_WIDTH = 96;
 
 function CancelAction({ progress, onPress }: { progress: SharedValue<number>; onPress: () => void }) {
+  const { t } = useTranslation();
   const style = useAnimatedStyle(() => ({
     opacity: interpolate(progress.get(), [0, 0.6, 1], [0, 0.6, 1], 'clamp'),
     transform: [{ scale: interpolate(progress.get(), [0, 1], [0.8, 1], 'clamp') }],
   }));
   return (
     <Animated.View style={[styles.actionWrap, style]}>
-      <PressableScale onPress={onPress} accessibilityRole="button" accessibilityLabel={strings.appointment.cancel} style={styles.action}>
+      <PressableScale onPress={onPress} accessibilityRole="button" accessibilityLabel={t('appointment.cancel')} style={styles.action}>
         <Ionicons name="close-circle" size={24} color={colors.white} />
         <AppText variant="caption" tone="inverse" style={styles.actionText}>
-          {strings.appointment.cancel}
+          {t('appointment.cancel')}
         </AppText>
       </PressableScale>
     </Animated.View>
@@ -38,10 +39,12 @@ export interface AppointmentListItemProps {
 
 /** Item lịch hẹn: vuốt sang trái hiện nút "Hủy lịch" (gesture-handler + reanimated). */
 function AppointmentListItemBase({ appointment, onRequestCancel }: AppointmentListItemProps) {
+  const { t } = useTranslation();
   const ref = useRef<SwipeableMethods>(null);
   const service = SERVICE_MAP[appointment.serviceId];
+  const serviceName = t(`appointment.services.${service.id}.name`);
   const date = fromDateKey(appointment.date);
-  const when = strings.appointment.at(appointment.time, formatDateLong(appointment.date));
+  const when = t('appointment.at', { time: appointment.time, date: formatDateLong(appointment.date) });
   const pending = appointment.id.startsWith('temp_');
 
   const close = useCallback(() => ref.current?.close(), []);
@@ -69,8 +72,8 @@ function AppointmentListItemBase({ appointment, onRequestCancel }: AppointmentLi
       >
         <Card
           style={[styles.card, pending && styles.pending]}
-          accessibilityLabel={strings.appointment.itemLabel(service.name, appointment.petName, when)}
-          accessibilityHint={strings.appointment.swipeHint}
+          accessibilityLabel={t('appointment.itemLabel', { service: serviceName, pet: appointment.petName, when })}
+          accessibilityHint={t('appointment.swipeHint')}
         >
           <View style={styles.row}>
             <View style={styles.dateBox}>
@@ -85,7 +88,7 @@ function AppointmentListItemBase({ appointment, onRequestCancel }: AppointmentLi
               <View style={styles.titleRow}>
                 <Ionicons name={service.icon} size={16} color={colors.primary} />
                 <AppText variant="bodyStrong" numberOfLines={1} style={styles.flex}>
-                  {service.name}
+                  {serviceName}
                 </AppText>
               </View>
               <AppText variant="body" tone="secondary" numberOfLines={1}>

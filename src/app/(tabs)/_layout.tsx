@@ -3,7 +3,7 @@ import { Tabs } from 'expo-router/js-tabs';
 import { type ColorValue, StyleSheet } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { strings } from '@/constants/strings';
+import { useTranslation } from 'react-i18next';
 import { haptic } from '@/hooks/useHaptic';
 import { colors, layout, spacing, typography } from '@/theme/theme';
 
@@ -18,6 +18,7 @@ function tabIcon(active: IconName, inactive: IconName) {
 const screenListeners = { tabPress: () => haptic.selection() };
 
 export default function TabsLayout() {
+  const { t } = useTranslation();
   const insets = useSafeAreaInsets();
   const barStyle = {
     backgroundColor: colors.surface,
@@ -41,22 +42,22 @@ export default function TabsLayout() {
     >
       <Tabs.Screen
         name="index"
-        options={{ title: strings.tabs.pets, tabBarIcon: tabIcon('paw', 'paw-outline'), tabBarAccessibilityLabel: strings.tabs.pets }}
+        options={{ title: t('tabs.pets'), tabBarIcon: tabIcon('paw', 'paw-outline'), tabBarAccessibilityLabel: t('tabs.pets') }}
       />
       <Tabs.Screen
         name="chat"
         options={{
-          title: strings.tabs.chat,
+          title: t('tabs.chat'),
           tabBarIcon: tabIcon('chatbubble-ellipses', 'chatbubble-ellipses-outline'),
-          tabBarAccessibilityLabel: strings.tabs.chat,
+          tabBarAccessibilityLabel: t('tabs.chat'),
         }}
       />
       <Tabs.Screen
         name="appointment"
         options={{
-          title: strings.tabs.appointment,
+          title: t('tabs.appointment'),
           tabBarIcon: tabIcon('calendar', 'calendar-outline'),
-          tabBarAccessibilityLabel: strings.tabs.appointment,
+          tabBarAccessibilityLabel: t('tabs.appointment'),
         }}
       />
     </Tabs>

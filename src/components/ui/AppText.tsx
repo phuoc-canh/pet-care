@@ -31,6 +31,8 @@ function AppTextBase({ variant = 'body', tone = 'default', center, style, ...res
   return (
     <Text
       maxFontSizeMultiplier={1.4}
+      // Tiếng Hàn: ngắt dòng theo từ (어절) thay vì giữa chữ (iOS 14+).
+      lineBreakStrategyIOS="hangul-word"
       {...rest}
       style={[variantStyle[variant], toneStyle[tone], center && styles.center, style]}
     />

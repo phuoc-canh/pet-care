@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
 import { suggestionsFor } from '@/data/ai-mock';
+import { isLanguage } from '@/i18n';
 import { AppError } from '@/libs/http';
 import { aiService } from '@/services/ai.service';
 import { useChatStore, useChatThread } from '@/store/chat.store';
@@ -69,6 +71,8 @@ export interface ChatStreamState {
 
 export function useChatStream(pet: Pet | undefined): ChatStreamState {
   const messages = useChatThread(pet?.id);
+  const { i18n } = useTranslation();
+  const language = isLanguage(i18n.language) ? i18n.language : 'vi';
   const append = useChatStore((s) => s.append);
   const remove = useChatStore((s) => s.remove);
   const clearThread = useChatStore((s) => s.clear);
@@ -149,6 +153,7 @@ export function useChatStream(pet: Pet | undefined): ChatStreamState {
       try {
         const result = await aiService.sendMessage({
           pet: target,
+          language,
           history: toHistory(history),
           signal: controller.signal,
           onToken: (delta) => {
@@ -176,7 +181,7 @@ export function useChatStream(pet: Pet | undefined): ChatStreamState {
         }
       }
     },
-    [append, resetStream, startFrameLoop, stopFrameLoop],
+    [append, language, resetStream, startFrameLoop, stopFrameLoop],
   );
 
   const send = useCallback(
@@ -244,7 +249,8 @@ export function useChatStream(pet: Pet | undefined): ChatStreamState {
   // Unmount → dọn rAF.
   useEffect(() => stopFrameLoop, [stopFrameLoop]);
 
-  const suggestions = useMemo(() => (pet ? suggestionsFor(pet) : []), [pet]);
+  // language trong deps: đổi ngôn ngữ → gợi ý đổi theo.
+  const suggestions = useMemo(() => (pet && language ? suggestionsFor(pet) : []), [pet, language]);
 
   return { messages, isStreaming, streamStore, offlineReason, suggestions, send, stop, retry, clear };
 }

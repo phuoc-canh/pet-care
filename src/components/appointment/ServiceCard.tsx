@@ -4,7 +4,7 @@ import { StyleSheet, View } from 'react-native';
 
 import { AppText, PressableScale } from '@/components/ui';
 import type { ServiceOption } from '@/constants/appointment';
-import { strings } from '@/constants/strings';
+import { useTranslation } from 'react-i18next';
 import { haptic } from '@/hooks/useHaptic';
 import { colors, radius, shadow, spacing } from '@/theme/theme';
 import type { ServiceId } from '@/types/services-type/appointment.type';
@@ -17,6 +17,7 @@ export interface ServiceCardProps {
 }
 
 function ServiceCardBase({ service, selected, onSelect }: ServiceCardProps) {
+  const { t } = useTranslation();
   const handlePress = useCallback(() => {
     if (!selected) haptic.selection();
     onSelect(service.id);
@@ -27,7 +28,7 @@ function ServiceCardBase({ service, selected, onSelect }: ServiceCardProps) {
       onPress={handlePress}
       accessibilityRole="radio"
       accessibilityState={{ selected }}
-      accessibilityLabel={`${service.name}, ${formatVnd(service.price)}, ${strings.appointment.duration(service.durationMin)}`}
+      accessibilityLabel={`${t(`appointment.services.${service.id}.name`)}, ${formatVnd(service.price)}, ${t('appointment.duration', { min: service.durationMin })}`}
       style={[styles.card, selected && styles.selected]}
     >
       <View style={[styles.icon, selected && styles.iconSelected]}>
@@ -35,10 +36,10 @@ function ServiceCardBase({ service, selected, onSelect }: ServiceCardProps) {
       </View>
       <View style={styles.text}>
         <AppText variant="bodyStrong" numberOfLines={1}>
-          {service.name}
+          {t(`appointment.services.${service.id}.name`)}
         </AppText>
         <AppText variant="caption" tone="secondary" numberOfLines={2}>
-          {service.description}
+          {t(`appointment.services.${service.id}.description`)}
         </AppText>
       </View>
       <View style={styles.price}>
@@ -46,7 +47,7 @@ function ServiceCardBase({ service, selected, onSelect }: ServiceCardProps) {
           {formatVnd(service.price)}
         </AppText>
         <AppText variant="caption" tone="secondary">
-          {strings.appointment.duration(service.durationMin)}
+          {t('appointment.duration', { min: service.durationMin })}
         </AppText>
       </View>
     </PressableScale>

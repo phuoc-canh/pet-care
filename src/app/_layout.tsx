@@ -1,3 +1,5 @@
+import '@/i18n'; // khởi tạo i18next trước mọi component
+
 import { QueryClientProvider } from '@tanstack/react-query';
 import { type ErrorBoundaryProps, Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
@@ -8,7 +10,7 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import { ErrorState } from '@/components/ui';
-import { strings } from '@/constants/strings';
+import { useTranslation } from 'react-i18next';
 import { useAppState } from '@/hooks/useAppState';
 import { queryClient } from '@/libs/queryClient';
 import { useAppStore, useAppStoreHydrated } from '@/store/app.store';
@@ -18,9 +20,10 @@ void SplashScreen.preventAutoHideAsync().catch(() => undefined);
 
 /** ErrorBoundary ở root: bắt mọi lỗi render, không bao giờ để trắng màn hình. */
 export function ErrorBoundary({ retry }: ErrorBoundaryProps) {
+  const { t } = useTranslation();
   return (
     <View style={styles.errorRoot}>
-      <ErrorState message={strings.error.boundary} onRetry={() => void retry()} />
+      <ErrorState message={t('errors.boundary')} onRetry={() => void retry()} />
     </View>
   );
 }

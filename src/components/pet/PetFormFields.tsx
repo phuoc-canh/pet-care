@@ -1,15 +1,13 @@
 import { memo, useCallback } from 'react';
 import { type Control, Controller, type FieldErrors } from 'react-hook-form';
+import { useTranslation } from 'react-i18next';
 import { StyleSheet, View } from 'react-native';
 
 import { AppText, Chip, TextField } from '@/components/ui';
 import { PERSONALITIES, PET_LIMITS, SPECIES } from '@/constants/pet';
-import { strings } from '@/constants/strings';
 import { spacing } from '@/theme/theme';
 import type { Personality, Species } from '@/types/services-type/pet.type';
 import type { PetFormInput, PetFormOutput } from '@/utils/validation';
-
-const s = strings.petForm;
 
 export interface PetFormFieldsProps {
   control: Control<PetFormInput, unknown, PetFormOutput>;
@@ -43,16 +41,18 @@ function ErrorText({ message }: { message?: string }) {
 }
 
 function SpeciesField({ value, onChange }: { value: Species | undefined; onChange: (v: Species) => void }) {
+  const { t } = useTranslation();
   return (
     <View style={styles.chips}>
       {SPECIES.map((sp) => (
-        <Chip key={sp.value} value={sp.value} label={sp.label} leading={sp.emoji} selected={value === sp.value} onToggle={onChange} />
+        <Chip key={sp.value} value={sp.value} label={t(`pet.species.${sp.value}`)} leading={sp.emoji} selected={value === sp.value} onToggle={onChange} />
       ))}
     </View>
   );
 }
 
 function PersonalityField({ value, onChange }: { value: Personality[]; onChange: (v: Personality[]) => void }) {
+  const { t } = useTranslation();
   const toggle = useCallback(
     (p: Personality) => {
       if (value.includes(p)) onChange(value.filter((x) => x !== p));
@@ -63,7 +63,7 @@ function PersonalityField({ value, onChange }: { value: Personality[]; onChange:
   return (
     <View style={styles.chips}>
       {PERSONALITIES.map((p) => (
-        <Chip key={p.value} value={p.value} label={p.label} selected={value.includes(p.value)} onToggle={toggle} />
+        <Chip key={p} value={p} label={t(`pet.personality.${p}`)} selected={value.includes(p)} onToggle={toggle} />
       ))}
     </View>
   );
@@ -71,6 +71,7 @@ function PersonalityField({ value, onChange }: { value: Personality[]; onChange:
 
 /** Field của form thú cưng, tách khỏi view để tái dùng cho tạo mới & sửa. */
 function PetFormFieldsBase({ control, errors, showError }: PetFormFieldsProps) {
+  const { t } = useTranslation();
   const err = (field: keyof PetFormInput): string | undefined =>
     showError(field) ? errors[field]?.message : undefined;
 
@@ -81,8 +82,8 @@ function PetFormFieldsBase({ control, errors, showError }: PetFormFieldsProps) {
         name="name"
         render={({ field: { value, onChange, onBlur } }) => (
           <TextField
-            label={s.name}
-            placeholder={s.namePlaceholder}
+            label={t('pet.form.name')}
+            placeholder={t('pet.form.namePlaceholder')}
             value={value}
             onChangeText={onChange}
             onBlur={onBlur}
@@ -95,7 +96,7 @@ function PetFormFieldsBase({ control, errors, showError }: PetFormFieldsProps) {
       />
 
       <View style={styles.group}>
-        <FieldLabel text={s.species} />
+        <FieldLabel text={t('pet.form.species')} />
         <Controller
           control={control}
           name="species"
@@ -109,8 +110,8 @@ function PetFormFieldsBase({ control, errors, showError }: PetFormFieldsProps) {
         name="breed"
         render={({ field: { value, onChange, onBlur } }) => (
           <TextField
-            label={s.breed}
-            placeholder={s.breedPlaceholder}
+            label={t('pet.form.breed')}
+            placeholder={t('pet.form.breedPlaceholder')}
             value={value}
             onChangeText={onChange}
             onBlur={onBlur}
@@ -127,8 +128,8 @@ function PetFormFieldsBase({ control, errors, showError }: PetFormFieldsProps) {
             name="ageYears"
             render={({ field: { value, onChange, onBlur } }) => (
               <TextField
-                label={s.age}
-                placeholder={s.agePlaceholder}
+                label={t('pet.form.age')}
+                placeholder={t('pet.form.agePlaceholder')}
                 value={value}
                 onChangeText={onChange}
                 onBlur={onBlur}
@@ -145,8 +146,8 @@ function PetFormFieldsBase({ control, errors, showError }: PetFormFieldsProps) {
             name="weightKg"
             render={({ field: { value, onChange, onBlur } }) => (
               <TextField
-                label={s.weight}
-                placeholder={s.weightPlaceholder}
+                label={t('pet.form.weight')}
+                placeholder={t('pet.form.weightPlaceholder')}
                 value={value}
                 onChangeText={onChange}
                 onBlur={onBlur}
@@ -160,7 +161,7 @@ function PetFormFieldsBase({ control, errors, showError }: PetFormFieldsProps) {
       </View>
 
       <View style={styles.group}>
-        <FieldLabel text={s.personality} hint={s.personalityHint(PET_LIMITS.personalitiesMax)} />
+        <FieldLabel text={t('pet.form.personality')} hint={t('pet.form.personalityHint', { max: PET_LIMITS.personalitiesMax })} />
         <Controller
           control={control}
           name="personalities"

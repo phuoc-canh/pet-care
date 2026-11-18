@@ -23,7 +23,7 @@ import { StreamingBubble } from '@/components/chat/StreamingBubble';
 import { SuggestionChips } from '@/components/chat/SuggestionChips';
 import { DialogConfirm } from '@/components/common/DialogConfirm';
 import { AppText, EmptyState, PressableScale, Screen, Skeleton } from '@/components/ui';
-import { strings } from '@/constants/strings';
+import { useTranslation } from 'react-i18next';
 import { useAppState } from '@/hooks/useAppState';
 import { useChatStream } from '@/hooks/useChatStream';
 import { useSelectedPet } from '@/hooks/useSelectedPet';
@@ -37,6 +37,7 @@ const ANIMATE_WINDOW_MS = 4000;
 const keyExtractor = (m: ChatMessage) => m.id;
 
 export default function Chat() {
+  const { t } = useTranslation();
   const router = useRouter();
   const { query, pets, pet, selectPet } = useSelectedPet();
   const chat = useChatStream(pet);
@@ -127,9 +128,9 @@ export default function Chat() {
       <Screen style={styles.center}>
         <EmptyState
           emoji="💬"
-          title={strings.chat.noPetTitle}
-          description={strings.chat.noPetBody}
-          actionLabel={strings.petHome.addPet}
+          title={t('chat.noPetTitle')}
+          description={t('chat.noPetBody')}
+          actionLabel={t('pet.home.addPet')}
           onAction={goAddPet}
         />
       </Screen>
@@ -167,14 +168,14 @@ export default function Chat() {
                   </Text>
                 </View>
                 <AppText variant="title" tone="navy" center>
-                  {strings.chat.greetingTitle}
+                  {t('chat.greetingTitle')}
                 </AppText>
                 <AppText variant="body" tone="secondary" center style={styles.greetingBody}>
-                  {strings.chat.greetingBody(pet.name)}
+                  {t('chat.greetingBody', { name: pet.name })}
                 </AppText>
               </Animated.View>
               <AppText variant="caption" tone="secondary" style={styles.suggestTitle}>
-                {strings.chat.suggestions}
+                {t('chat.suggestions')}
               </AppText>
               <SuggestionChips key={`s-${pet.id}`} suggestions={suggestions} onPick={handleSend} />
             </ScrollView>
@@ -203,13 +204,13 @@ export default function Chat() {
               <PressableScale
                 onPress={scrollToBottom}
                 accessibilityRole="button"
-                accessibilityLabel={strings.chat.scrollToBottom}
+                accessibilityLabel={t('chat.scrollToBottom')}
                 style={[styles.newButton, hasNew && styles.newButtonActive]}
               >
                 <Ionicons name="arrow-down" size={16} color={hasNew ? colors.white : colors.primary} />
                 {hasNew ? (
                   <AppText variant="caption" tone="inverse" style={styles.newText}>
-                    {strings.chat.newMessages}
+                    {t('chat.newMessages')}
                   </AppText>
                 ) : null}
               </PressableScale>
@@ -218,7 +219,7 @@ export default function Chat() {
         </View>
 
         <ChatInput
-          placeholder={strings.chat.placeholder(pet.name)}
+          placeholder={t('chat.placeholder', { name: pet.name })}
           isStreaming={isStreaming}
           onSend={handleSend}
           onStop={stop}
@@ -235,9 +236,9 @@ export default function Chat() {
       <DialogConfirm
         visible={confirmClear}
         emoji="🧹"
-        title={strings.chat.clearTitle}
-        message={strings.chat.clearBody(pet.name)}
-        confirmLabel={strings.common.delete}
+        title={t('chat.clearTitle')}
+        message={t('chat.clearBody', { name: pet.name })}
+        confirmLabel={t('common.delete')}
         destructive
         onConfirm={doClear}
         onCancel={closeClear}

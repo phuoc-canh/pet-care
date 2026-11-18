@@ -10,6 +10,7 @@
 ![Expo Router](https://img.shields.io/badge/Expo_Router-tabs_·_stack_·_modal-000020?logo=expo&logoColor=white)
 ![TanStack Query](https://img.shields.io/badge/TanStack_Query-v5-FF4154?logo=reactquery&logoColor=white)
 ![Zustand](https://img.shields.io/badge/Zustand-v5-443E38)
+![i18next](https://img.shields.io/badge/i18n-vi_·_en_·_ko-26A69A?logo=i18next&logoColor=white)
 ![Reanimated](https://img.shields.io/badge/Reanimated-4-6E56CF)
 ![Cloudflare Workers](https://img.shields.io/badge/Cloudflare-Workers-F38020?logo=cloudflare&logoColor=white)
 
@@ -31,7 +32,8 @@
 
 - **Onboarding** 3 slide, chỉ hiện ở lần mở đầu tiên.
 - **Hồ sơ thú cưng**: thêm / sửa / xóa; loài, giống, tuổi, cân nặng, tính cách; chuyển nhanh giữa các bé.
-- **Hỏi AI (Pal)**: trả lời tiếng Việt cá nhân hóa theo hồ sơ, hiện chữ dần (streaming), nút **Dừng**, gợi ý câu hỏi theo từng bé, lịch sử chat riêng cho mỗi bé.
+- **Đa ngôn ngữ** 🇻🇳 Tiếng Việt · 🇺🇸 English · 🇰🇷 한국어: đổi ngay trong app (nút 🌐 hoặc ở onboarding), không cần tải lại; AI trả lời theo ngôn ngữ người dùng.
+- **Hỏi AI (Pal)**: trả lời cá nhân hóa theo hồ sơ, hiện chữ dần (streaming), nút **Dừng**, gợi ý câu hỏi theo từng bé, lịch sử chat riêng cho mỗi bé.
 - **Không bao giờ treo**: mất mạng, AI quá tải hay hết credit → tự chuyển **chế độ offline** với câu trả lời có sẵn và nút **Thử lại**.
 - **Lịch hẹn**: chọn dịch vụ (giá VND) → ngày → giờ (giờ đã kín bị khóa) → xác nhận → animation thành công; **vuốt để hủy**.
 - **Trải nghiệm**: skeleton thay spinner, empty state có hướng dẫn, pull-to-refresh, haptic, nhấn card có hiệu ứng, safe area đúng trên iPhone tai thỏ và Android, label cho trình đọc màn hình.
@@ -126,6 +128,20 @@ FlatList với `keyExtractor` ổn định, item `React.memo`, callback `useCall
 
 ---
 
+## Đa ngôn ngữ
+
+- **i18next + react-i18next + expo-localization** (chạy trên Expo Go). Text nằm trong `src/i18n/locales/{vi,en,ko}.json`, chia theo domain: `common`, `errors`, `onboarding`, `pet`, `chat`, `appointment`.
+- **Key có kiểu TypeScript**: `i18next.d.ts` khai báo resources theo `vi.json` → gõ sai key là lỗi biên dịch; `en`/`ko` dùng `satisfies typeof vi` nên thiếu key cũng báo lỗi.
+- Ngôn ngữ mặc định lấy từ thiết bị (nếu là vi/en/ko, không thì `vi`). Lựa chọn của người dùng lưu trong **Zustand persist** và đồng bộ với i18next khi hydrate → đổi là UI cập nhật ngay, không reload.
+- Ngày giờ dùng `Intl.DateTimeFormat` theo locale (`Thứ Năm, 19/11` · `Thu, Nov 19` · `11월 19일 (목)`); tiền luôn là VND nhưng format theo locale (`250.000 ₫` · `₫250,000`).
+- Code ngoài React (validation valibot, thông báo lỗi HTTP, mock) gọi `i18n.t()` **tại thời điểm chạy** nên cũng đổi theo ngôn ngữ.
+- Dữ liệu mock có bản cho cả 3 ngôn ngữ: giống của thú cưng mẫu (như backend trả theo `Accept-Language`), câu hỏi gợi ý và câu trả lời offline.
+- Tiếng Hàn dùng văn phong **해요체** và thuật ngữ quen thuộc của app thú cưng Hàn (반려동물, 산책, 미용, 건강검진, 예방접종); câu có tên thú cưng tránh trợ từ 은/는/이/가 (phụ thuộc phụ âm cuối) bằng cấu trúc `{이름}의 …`, `{이름}에 대해 …`.
+- **AI**: app gửi `lang` trong `POST /chat`, worker validate rồi đưa vào system prompt. Quy tắc: **trả lời theo ngôn ngữ của câu hỏi**; `lang` (ngôn ngữ giao diện) là mặc định khi câu hỏi không rõ ngôn ngữ; thông tin hồ sơ được gửi kèm nhãn đúng ngôn ngữ để câu trả lời không lẫn từ ngoại ngữ.
+- Ô chat là **uncontrolled input** để bàn phím ghép chữ (Hàn/Nhật/Trung) không bị ngắt giữa chừng khi gõ.
+
+---
+
 ## Bảo mật
 
 - **API key chỉ nằm ở Worker** (Cloudflare secret). Mọi thứ trong bundle app — kể cả biến `EXPO_PUBLIC_*` — đều giải nén được từ APK/IPA, nên client **không giữ secret nào**.
@@ -184,7 +200,7 @@ npx wrangler deploy
 | Endpoint | Mô tả |
 |---|---|
 | `GET /health` | `{ ok: true, model }` |
-| `POST /chat` | Header `x-app-token`, body `{ pet, messages }` → SSE định dạng OpenAI (`data: {...}` … `data: [DONE]`) |
+| `POST /chat` | Header `x-app-token`, body `{ lang, pet, messages }` → SSE định dạng OpenAI (`data: {...}` … `data: [DONE]`) |
 
 <details>
 <summary><b>Chọn model (đo thực tế)</b></summary>
@@ -192,8 +208,10 @@ npx wrangler deploy
 | Model | Token đầu | Kết quả |
 |---|---|---|
 | `claude-haiku-4-5` | 4.5s | ❌ Qua RevidAPI bị bọc system prompt riêng, bỏ qua prompt của app |
-| **`google/gemini-flash`** | **3.3s** | ✅ Đúng vai Pal, tiếng Việt tự nhiên → `AI_MODEL` |
-| `grok-4.5` | 8.5s | ✅ Đủ ý nhưng chậm → `AI_FALLBACK_MODEL` (khác nhà cung cấp) |
-| `deepseek-v4-flash` | 4.8s | ⚠️ Tốn token cho reasoning, bị cắt ở 500 token |
+| `claude-haiku-5-5` | 3.6s | ❌ Cùng vấn đề như trên |
+| `google/gemini-flash` | 3.3s | ⚠️ Chất lượng tốt nhưng thuộc **free tier (10 lượt)** → hết lượt trả `402 free_tier_exhausted` dù tài khoản còn credit |
+| **`deepseek-v4.1-flash`** | **~4s** | ✅ Model trả phí, nhanh, đúng vai Pal, tốt cả vi/en/ko, stream thật → `AI_MODEL` (`max_tokens` 800 vì có bước suy luận) |
+| `grok-4.7` | ~10s | ✅ Đủ ý nhưng chậm → `AI_FALLBACK_MODEL` (khác nhà cung cấp) |
+| `gpt-6-luna` | ~10s | ✅ Tốt nhưng chậm |
 
 </details>

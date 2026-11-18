@@ -1,7 +1,7 @@
 import { memo } from 'react';
 import { StyleSheet, Text, View, type StyleProp, type ViewStyle } from 'react-native';
 
-import { SPECIES_MAP } from '@/constants/pet';
+import { SPECIES_EMOJI } from '@/constants/pet';
 import { colors, speciesPastel } from '@/theme/theme';
 import type { Species } from '@/types/services-type/pet.type';
 
@@ -31,7 +31,7 @@ function AvatarBase({ species, size = 56, selected = false, style }: AvatarProps
         ]}
       >
         <Text style={{ fontSize: size * 0.52, lineHeight: size * 0.68 }} allowFontScaling={false}>
-          {SPECIES_MAP[species].emoji}
+          {SPECIES_EMOJI[species]}
         </Text>
       </View>
     </View>

@@ -7,7 +7,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { PetFormFields } from '@/components/pet/PetFormFields';
 import { AppText, Button, IconButton } from '@/components/ui';
-import { strings } from '@/constants/strings';
+import { useTranslation } from 'react-i18next';
 import { useCreatePet, usePet, useUpdatePet } from '@/hooks/services/usePets';
 import { haptic } from '@/hooks/useHaptic';
 import { useAppStore } from '@/store/app.store';
@@ -37,6 +37,7 @@ function toFormValues(pet: Pet): PetFormInput {
 
 /** Form tạo mới (modal) — truyền `?id=` thì chuyển sang chế độ sửa. */
 export default function PetCreate() {
+  const { t } = useTranslation();
   const { id } = useLocalSearchParams<{ id?: string }>();
   const isEdit = Boolean(id);
   const router = useRouter();
@@ -108,9 +109,9 @@ export default function PetCreate() {
             <View style={styles.grabber} />
             <View style={styles.headerRow}>
               <AppText variant="title" accessibilityRole="header">
-                {isEdit ? strings.petForm.editTitle : strings.petForm.createTitle}
+                {isEdit ? t('pet.form.editTitle') : t('pet.form.createTitle')}
               </AppText>
-              <IconButton icon="close" onPress={close} accessibilityLabel={strings.petForm.closeLabel} />
+              <IconButton icon="close" onPress={close} accessibilityLabel={t('pet.form.closeLabel')} />
             </View>
           </View>
 
@@ -126,7 +127,7 @@ export default function PetCreate() {
 
           <View style={[styles.footer, { paddingBottom: Math.max(insets.bottom, spacing.md) }]}>
             <Button
-              title={isEdit ? strings.petForm.submitEdit : strings.petForm.submitCreate}
+              title={isEdit ? t('pet.form.submitEdit') : t('pet.form.submitCreate')}
               onPress={handleSubmit(onSubmit)}
               disabled={!canSubmit}
               loading={submitting}

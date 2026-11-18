@@ -4,17 +4,17 @@ import { StyleSheet, View } from 'react-native';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 
 import { AppText, PressableScale } from '@/components/ui';
-import { strings } from '@/constants/strings';
+import { useTranslation } from 'react-i18next';
 import { colors, layout, radius, shadow, spacing } from '@/theme/theme';
 import type { ChatMessage } from '@/types/services-type/chat.type';
 import type { AppErrorCode } from '@/types/services-type/common.type';
 
 import { RichText } from './RichText';
 
-const notices = strings.chat.errorNotice;
+type NoticeKey = 'NETWORK' | 'TIMEOUT' | 'NO_CREDIT' | 'RATE_LIMITED' | 'SERVER' | 'MISSING_CONFIG' | 'UNAUTHORIZED' | 'DEFAULT' | 'PARTIAL';
 
-function noticeFor(code: AppErrorCode, offline: boolean): string {
-  if (!offline) return notices.PARTIAL;
+function noticeKey(code: AppErrorCode, offline: boolean): NoticeKey {
+  if (!offline) return 'PARTIAL';
   switch (code) {
     case 'NETWORK':
     case 'TIMEOUT':
@@ -23,9 +23,9 @@ function noticeFor(code: AppErrorCode, offline: boolean): string {
     case 'SERVER':
     case 'MISSING_CONFIG':
     case 'UNAUTHORIZED':
-      return notices[code];
+      return code;
     default:
-      return notices.DEFAULT;
+      return 'DEFAULT';
   }
 }
 
@@ -37,6 +37,7 @@ export interface ChatBubbleProps {
 }
 
 function ChatBubbleBase({ message, animate, onRetry }: ChatBubbleProps) {
+  const { t } = useTranslation();
   const isUser = message.role === 'user';
   const handleRetry = useCallback(() => onRetry?.(message.id), [message.id, onRetry]);
   const showNotice = !isUser && message.errorCode && message.errorCode !== 'MISSING_CONFIG';
@@ -49,7 +50,7 @@ function ChatBubbleBase({ message, animate, onRetry }: ChatBubbleProps) {
       <View
         style={[styles.bubble, isUser ? styles.user : styles.ai]}
         accessible
-        accessibilityLabel={`${isUser ? strings.chat.you : strings.chat.pal}: ${message.content}`}
+        accessibilityLabel={`${isUser ? t('chat.you') : t('chat.pal')}: ${message.content}`}
       >
         {isUser ? (
           <AppText variant="body" tone="inverse" style={styles.userText} selectable>
@@ -64,19 +65,19 @@ function ChatBubbleBase({ message, animate, onRetry }: ChatBubbleProps) {
         <View style={styles.notice}>
           <Ionicons name="cloud-offline-outline" size={14} color={colors.textSecondary} />
           <AppText variant="caption" tone="secondary" style={styles.noticeText}>
-            {noticeFor(message.errorCode ?? 'UNKNOWN', Boolean(message.offline))}
+            {t(`chat.notice.${noticeKey(message.errorCode ?? 'UNKNOWN', Boolean(message.offline))}`)}
           </AppText>
           {onRetry ? (
             <PressableScale
               onPress={handleRetry}
               hitSlop={layout.hitSlop}
               accessibilityRole="button"
-              accessibilityLabel={strings.chat.retry}
+              accessibilityLabel={t('chat.retry')}
               style={styles.retry}
             >
               <Ionicons name="refresh" size={14} color={colors.primary} />
               <AppText variant="caption" tone="primary" style={styles.retryText}>
-                {strings.chat.retry}
+                {t('chat.retry')}
               </AppText>
             </PressableScale>
           ) : null}

@@ -4,7 +4,7 @@ import { StyleSheet, View } from 'react-native';
 import Animated, { FadeIn, FadeOut } from 'react-native-reanimated';
 
 import { AppText, Avatar, IconButton, Pill, PressableScale } from '@/components/ui';
-import { strings } from '@/constants/strings';
+import { useTranslation } from 'react-i18next';
 import { colors, layout, spacing } from '@/theme/theme';
 import type { Pet } from '@/types/services-type/pet.type';
 
@@ -17,18 +17,19 @@ export interface ChatHeaderProps {
 }
 
 function ChatHeaderBase({ pet, offline, canClear, onSwitchPet, onClear }: ChatHeaderProps) {
+  const { t } = useTranslation();
   return (
     <View style={styles.container}>
       <PressableScale
         onPress={onSwitchPet}
         accessibilityRole="button"
-        accessibilityLabel={strings.chat.switchPetLabel(pet.name)}
+        accessibilityLabel={t('chat.switchPetLabel', { name: pet.name })}
         style={styles.petButton}
       >
         <Avatar species={pet.species} size={40} />
         <View style={styles.texts}>
           <AppText variant="caption" tone="secondary">
-            {strings.chat.askingAbout}
+            {t('chat.askingAbout')}
           </AppText>
           <View style={styles.nameRow}>
             <AppText variant="subtitle" tone="navy" numberOfLines={1} style={styles.name}>
@@ -42,11 +43,11 @@ function ChatHeaderBase({ pet, offline, canClear, onSwitchPet, onClear }: ChatHe
       <View style={styles.right}>
         {offline ? (
           <Animated.View entering={FadeIn} exiting={FadeOut} accessibilityLiveRegion="polite">
-            <Pill label={strings.chat.offline} tone="warning" icon="cloud-offline" />
+            <Pill label={t('chat.offline')} tone="warning" icon="cloud-offline" />
           </Animated.View>
         ) : null}
         {canClear ? (
-          <IconButton icon="trash-outline" variant="plain" onPress={onClear} accessibilityLabel={strings.chat.clear} />
+          <IconButton icon="trash-outline" variant="plain" onPress={onClear} accessibilityLabel={t('chat.clear')} />
         ) : null}
       </View>
     </View>

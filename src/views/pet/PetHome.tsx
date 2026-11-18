@@ -1,26 +1,33 @@
 import { useRouter } from 'expo-router';
-import { useCallback } from 'react';
+import { useCallback, useState } from 'react';
 import { RefreshControl, ScrollView, StyleSheet, View } from 'react-native';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 
+import { LanguageSheet } from '@/components/common/LanguageSheet';
 import { PetCard, PetCardSkeleton } from '@/components/pet/PetCard';
 import { PetHeroHeader } from '@/components/pet/PetHeroHeader';
 import { PetSelector } from '@/components/pet/PetSelector';
 import { QuickActionCard } from '@/components/pet/QuickActionCard';
 import { EmptyState, ErrorState, Skeleton } from '@/components/ui';
-import { strings } from '@/constants/strings';
+import { useTranslation } from 'react-i18next';
 import { useAppointments } from '@/hooks/services/useAppointments';
 import { usePrefetchPet } from '@/hooks/services/usePets';
+import { useLanguage } from '@/hooks/useLanguage';
 import { useSelectedPet } from '@/hooks/useSelectedPet';
 import { colors, spacing } from '@/theme/theme';
 
 import { UpcomingSummary } from './UpcomingSummary';
 
 export default function PetHome() {
+  const { t } = useTranslation();
   const router = useRouter();
   const { query, pets, pet, selectPet } = useSelectedPet();
   const prefetchPet = usePrefetchPet();
   const { refetch: refetchAppointments } = useAppointments();
+  const { language, setLanguage } = useLanguage();
+  const [languageOpen, setLanguageOpen] = useState(false);
+  const openLanguage = useCallback(() => setLanguageOpen(true), []);
+  const closeLanguage = useCallback(() => setLanguageOpen(false), []);
 
   const goAdd = useCallback(() => router.push('/pet/new'), [router]);
   const goDetail = useCallback((id: string) => router.push({ pathname: '/pet/[id]', params: { id } }), [router]);
@@ -47,7 +54,7 @@ export default function PetHome() {
           />
         }
       >
-        <PetHeroHeader petName={pet?.name}>
+        <PetHeroHeader petName={pet?.name} onLanguagePress={openLanguage}>
           {isInitialLoading ? (
             <View style={styles.selectorSkeleton}>
               <Skeleton width={60} height={60} rounded={30} />
@@ -67,9 +74,9 @@ export default function PetHome() {
           ) : !pet ? (
             <EmptyState
               emoji="🐾"
-              title={strings.petHome.noPetTitle}
-              description={strings.petHome.noPetBody}
-              actionLabel={strings.petHome.addPet}
+              title={t('pet.home.noPetTitle')}
+              description={t('pet.home.noPetBody')}
+              actionLabel={t('pet.home.addPet')}
               onAction={goAdd}
             />
           ) : (
@@ -77,9 +84,9 @@ export default function PetHome() {
               <PetCard pet={pet} onPress={goDetail} onPressIn={prefetchPet} />
               <QuickActionCard
                 highlight
-                tag={strings.petHome.askAiTag}
-                title={strings.petHome.askAiTitle(pet.name)}
-                description={strings.petHome.askAiBody}
+                tag={t('pet.home.askAiTag')}
+                title={t('pet.home.askAiTitle', { name: pet.name })}
+                description={t('pet.home.askAiBody')}
                 icon="chatbubble-ellipses"
                 onPress={goChat}
               />
@@ -88,6 +95,7 @@ export default function PetHome() {
           )}
         </View>
       </ScrollView>
+      <LanguageSheet visible={languageOpen} value={language} onSelect={setLanguage} onClose={closeLanguage} />
     </View>
   );
 }

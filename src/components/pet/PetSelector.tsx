@@ -3,7 +3,7 @@ import { memo, useCallback, useEffect, useRef } from 'react';
 import { FlatList, type ListRenderItem, StyleSheet, useWindowDimensions, View } from 'react-native';
 
 import { AppText, Avatar, PressableScale } from '@/components/ui';
-import { strings } from '@/constants/strings';
+import { useTranslation } from 'react-i18next';
 import { haptic } from '@/hooks/useHaptic';
 import { colors, layout, spacing } from '@/theme/theme';
 import type { Pet } from '@/types/services-type/pet.type';
@@ -15,6 +15,7 @@ interface ItemProps {
 }
 
 const SelectorItem = memo(function SelectorItem({ pet, selected, onSelect }: ItemProps) {
+  const { t } = useTranslation();
   const handlePress = useCallback(() => {
     if (selected) return;
     haptic.selection();
@@ -26,7 +27,7 @@ const SelectorItem = memo(function SelectorItem({ pet, selected, onSelect }: Ite
       onPress={handlePress}
       accessibilityRole="tab"
       accessibilityState={{ selected }}
-      accessibilityLabel={strings.petHome.selectorLabel(pet.name)}
+      accessibilityLabel={t('pet.home.selectorLabel', { name: pet.name })}
       style={styles.item}
     >
       <Avatar species={pet.species} size={52} selected={selected} />
@@ -50,6 +51,7 @@ const ITEM_STRIDE = ITEM_WIDTH + spacing.sm;
 
 /** Thanh chọn thú cưng ngang. Dùng ở Home và header Chat. */
 function PetSelectorBase({ pets, selectedId, onSelect, onAdd }: PetSelectorProps) {
+  const { t } = useTranslation();
   const listRef = useRef<FlatList<Pet>>(null);
   const { width } = useWindowDimensions();
   const selectedIndex = pets.findIndex((p) => p.id === selectedId);
@@ -70,14 +72,14 @@ function PetSelectorBase({ pets, selectedId, onSelect, onAdd }: PetSelectorProps
     <PressableScale
       onPress={onAdd}
       accessibilityRole="button"
-      accessibilityLabel={strings.petHome.addPetLabel}
+      accessibilityLabel={t('pet.home.addPetLabel')}
       style={styles.item}
     >
       <View style={styles.add}>
         <Ionicons name="add" size={26} color={colors.primary} />
       </View>
       <AppText variant="caption" tone="secondary" numberOfLines={1} style={styles.name}>
-        {strings.petHome.addShort}
+        {t('pet.home.addShort')}
       </AppText>
     </PressableScale>
   ) : undefined;

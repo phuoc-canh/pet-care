@@ -11,7 +11,7 @@ import { TimeSlotGrid } from '@/components/appointment/TimeSlotGrid';
 import { PetSelector } from '@/components/pet/PetSelector';
 import { AppText, Avatar, Button, Card, EmptyState, IconButton, Pill } from '@/components/ui';
 import { SERVICE_MAP, SERVICES, TIME_SLOTS } from '@/constants/appointment';
-import { strings } from '@/constants/strings';
+import { useTranslation } from 'react-i18next';
 import { useBookAppointment, useBusySlots } from '@/hooks/services/useAppointments';
 import { haptic } from '@/hooks/useHaptic';
 import { useSelectedPet } from '@/hooks/useSelectedPet';
@@ -47,6 +47,7 @@ function Row({ label, value, strong }: { label: string; value: string; strong?: 
 }
 
 export default function AppointmentBook() {
+  const { t } = useTranslation();
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { pets, pet: defaultPet } = useSelectedPet();
@@ -89,27 +90,27 @@ export default function AppointmentBook() {
       .mutateAsync({ petId: pet.id, petName: pet.name, serviceId: service.id, date, time: effectiveTime, price: service.price })
       .then(() => {
         haptic.success();
-        setBookedWhen(strings.appointment.at(effectiveTime, formatDateLong(date)));
+        setBookedWhen(t('appointment.at', { time: effectiveTime, date: formatDateLong(date) }));
         setStep('success');
       })
       .catch((err: unknown) => {
         haptic.error();
         const slotTaken = err instanceof AppError && err.code === 'BAD_REQUEST';
-        setErrorText(slotTaken ? strings.appointment.slotTaken : strings.appointment.bookFailed);
+        setErrorText(slotTaken ? t('appointment.slotTaken') : t('appointment.bookFailed'));
         if (slotTaken) {
           setTime(null);
           setStep('select');
         }
       });
-  }, [book, date, effectiveTime, pet, service]);
+  }, [book, date, effectiveTime, pet, service, t]);
 
-  const when = effectiveTime ? strings.appointment.at(effectiveTime, formatDateLong(date)) : '';
+  const when = effectiveTime ? t('appointment.at', { time: effectiveTime, date: formatDateLong(date) }) : '';
   const topPad = Platform.OS === 'android' ? insets.top + spacing.xs : spacing.md;
 
   if (!pet) {
     return (
       <View style={[styles.root, styles.center, { paddingTop: topPad }]}>
-        <EmptyState emoji="🐾" title={strings.appointment.noPet} actionLabel={strings.petHome.addPet} onAction={() => router.replace('/pet/new')} />
+        <EmptyState emoji="🐾" title={t('appointment.noPet')} actionLabel={t('pet.home.addPet')} onAction={() => router.replace('/pet/new')} />
       </View>
     );
   }
@@ -120,14 +121,14 @@ export default function AppointmentBook() {
         <SuccessCheck />
         <Animated.View entering={FadeIn.delay(250).duration(300)} style={styles.successText}>
           <AppText variant="heading" tone="navy" center accessibilityRole="header">
-            {strings.appointment.successTitle}
+            {t('appointment.successTitle')}
           </AppText>
           <AppText variant="bodyStrong" tone="secondary" center style={styles.successBody}>
-            {strings.appointment.successBody(pet.name, bookedWhen)}
+            {t('appointment.successBody', { pet: pet.name, when: bookedWhen })}
           </AppText>
         </Animated.View>
         <View style={styles.successAction}>
-          <Button title={strings.appointment.done} onPress={close} />
+          <Button title={t('appointment.done')} onPress={close} />
         </View>
       </View>
     );
@@ -137,26 +138,26 @@ export default function AppointmentBook() {
     <View style={[styles.root, { paddingTop: topPad }]}>
       <View style={styles.headerRow}>
         {step === 'confirm' ? (
-          <IconButton icon="chevron-back" onPress={goSelect} accessibilityLabel={strings.appointment.edit} />
+          <IconButton icon="chevron-back" onPress={goSelect} accessibilityLabel={t('appointment.edit')} />
         ) : (
           <View style={styles.headerSpacer} />
         )}
         <AppText variant="subtitle" accessibilityRole="header">
-          {step === 'confirm' ? strings.appointment.summaryTitle : strings.appointment.bookTitle}
+          {step === 'confirm' ? t('appointment.summaryTitle') : t('appointment.bookTitle')}
         </AppText>
-        <IconButton icon="close" onPress={close} accessibilityLabel={strings.appointment.close} />
+        <IconButton icon="close" onPress={close} accessibilityLabel={t('common.close')} />
       </View>
 
       {step === 'select' ? (
         <Animated.View key="select" entering={FadeInLeft.duration(220)} style={styles.flex}>
           <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
             <AppText variant="caption" tone="secondary" style={[styles.label, styles.padded]}>
-              {strings.appointment.forPet}
+              {t('appointment.forPet')}
             </AppText>
             <PetSelector pets={pets} selectedId={pet.id} onSelect={setPetId} />
 
             <AppText variant="caption" tone="secondary" style={[styles.label, styles.padded]}>
-              1 · {strings.appointment.step1}
+              1 · {t('appointment.step1')}
             </AppText>
             <View style={[styles.padded, styles.services]}>
               {SERVICES.map((s) => (
@@ -165,12 +166,12 @@ export default function AppointmentBook() {
             </View>
 
             <AppText variant="caption" tone="secondary" style={[styles.label, styles.padded]}>
-              2 · {strings.appointment.step2}
+              2 · {t('appointment.step2')}
             </AppText>
             <DateStrip value={date} onChange={setDate} />
 
             <AppText variant="caption" tone="secondary" style={[styles.label, styles.padded]}>
-              3 · {strings.appointment.step3}
+              3 · {t('appointment.step3')}
             </AppText>
             <View style={styles.padded}>
               <TimeSlotGrid
@@ -189,7 +190,7 @@ export default function AppointmentBook() {
           </ScrollView>
           <View style={[styles.footer, { paddingBottom: Math.max(insets.bottom, spacing.md) }]}>
             <Button
-              title={canContinue ? strings.appointment.continue : strings.appointment.pickAll}
+              title={canContinue ? t('appointment.continue') : t('appointment.pickAll')}
               onPress={goConfirm}
               disabled={!canContinue}
             />
@@ -199,12 +200,12 @@ export default function AppointmentBook() {
         <Animated.View key="confirm" entering={FadeInRight.duration(220)} style={styles.flex}>
           <ScrollView contentContainerStyle={[styles.scroll, styles.padded]}>
             <Card>
-              <Pill label={strings.appointment.summaryTitle} icon="calendar" />
+              <Pill label={t('appointment.summaryTitle')} icon="calendar" />
               <View style={styles.summaryPet}>
                 <Avatar species={pet.species} size={52} />
                 <View>
                   <AppText variant="caption" tone="secondary">
-                    {strings.appointment.summaryPet}
+                    {t('appointment.summaryPet')}
                   </AppText>
                   <AppText variant="title" tone="navy">
                     {pet.name}
@@ -212,13 +213,13 @@ export default function AppointmentBook() {
                 </View>
               </View>
               <View style={styles.divider} />
-              <Row label={strings.appointment.summaryService} value={service?.name ?? ''} />
-              <Row label={strings.appointment.summaryTime} value={when} />
+              <Row label={t('appointment.summaryService')} value={service ? t(`appointment.services.${service.id}.name`) : ''} />
+              <Row label={t('appointment.summaryTime')} value={when} />
               <View style={styles.divider} />
-              <Row label={strings.appointment.summaryPrice} value={formatVnd(service?.price ?? 0)} strong />
+              <Row label={t('appointment.summaryPrice')} value={formatVnd(service?.price ?? 0)} strong />
             </Card>
             <AppText variant="caption" tone="secondary" center style={styles.note}>
-              {strings.appointment.summaryNote}
+              {t('appointment.summaryNote')}
             </AppText>
             {errorText ? (
               <AppText variant="body" tone="danger" center accessibilityLiveRegion="polite">
@@ -227,8 +228,8 @@ export default function AppointmentBook() {
             ) : null}
           </ScrollView>
           <View style={[styles.footer, { paddingBottom: Math.max(insets.bottom, spacing.md) }]}>
-            <Button title={strings.appointment.confirm} icon="checkmark-circle" onPress={submit} loading={book.isPending} />
-            <Button title={strings.appointment.edit} variant="ghost" onPress={goSelect} disabled={book.isPending} />
+            <Button title={t('appointment.confirm')} icon="checkmark-circle" onPress={submit} loading={book.isPending} />
+            <Button title={t('appointment.edit')} variant="ghost" onPress={goSelect} disabled={book.isPending} />
           </View>
         </Animated.View>
       )}

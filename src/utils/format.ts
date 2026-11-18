@@ -1,32 +1,53 @@
-import { strings } from '@/constants/strings';
+import { currentLanguage, currentLocale, i18n, type Language } from '@/i18n';
 
-const numberFormatter = new Intl.NumberFormat('vi-VN', { maximumFractionDigits: 2 });
+/**
+ * Định dạng theo ngôn ngữ đang chọn (đọc tại thời điểm gọi → đổi ngôn ngữ là đổi ngay).
+ * Formatter Intl được cache theo locale vì tạo mới khá tốn.
+ */
+
+const cache = new Map<string, Intl.NumberFormat | Intl.DateTimeFormat>();
+
+function numberFormat(key: string, options: Intl.NumberFormatOptions): Intl.NumberFormat {
+  const id = `n|${currentLocale()}|${key}`;
+  let f = cache.get(id);
+  if (!(f instanceof Intl.NumberFormat)) {
+    f = new Intl.NumberFormat(currentLocale(), options);
+    cache.set(id, f);
+  }
+  return f;
+}
+
+function dateFormat(key: string, options: Intl.DateTimeFormatOptions): Intl.DateTimeFormat {
+  const id = `d|${currentLocale()}|${key}`;
+  let f = cache.get(id);
+  if (!(f instanceof Intl.DateTimeFormat)) {
+    f = new Intl.DateTimeFormat(currentLocale(), options);
+    cache.set(id, f);
+  }
+  return f;
+}
 
 export function formatNumber(value: number): string {
-  return numberFormatter.format(value);
+  return numberFormat('num', { maximumFractionDigits: 2 }).format(value);
 }
 
 export function formatAge(ageYears: number): string {
-  if (ageYears < 1) {
-    const months = Math.max(1, Math.round(ageYears * 12));
-    return `${months} ${strings.common.months}`;
-  }
-  return `${formatNumber(ageYears)} ${strings.common.years}`;
+  if (ageYears < 1) return i18n.t('common.ageMonths', { count: Math.max(1, Math.round(ageYears * 12)) });
+  return i18n.t('common.ageYears', { count: formatNumber(ageYears) });
 }
 
 export function formatWeight(weightKg: number): string {
-  return `${formatNumber(weightKg)} ${strings.common.kg}`;
+  return i18n.t('common.weight', { value: formatNumber(weightKg) });
 }
 
-/** 350000 → "350.000 ₫" (tự format để không phụ thuộc Intl currency trên Hermes). */
+/** Tiền luôn là VND, nhưng định dạng theo locale: vi "250.000 ₫", en/ko "₫250,000". */
 export function formatVnd(amount: number): string {
-  const rounded = Math.round(amount);
-  const withDots = rounded.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.');
-  return `${withDots} ₫`;
+  try {
+    return numberFormat('vnd', { style: 'currency', currency: 'VND', maximumFractionDigits: 0 }).format(amount);
+  } catch {
+    return `${Math.round(amount).toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.')} ₫`;
+  }
 }
-
-const WEEKDAYS_SHORT = ['CN', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7'] as const;
-const WEEKDAYS_LONG = ['Chủ nhật', 'Thứ hai', 'Thứ ba', 'Thứ tư', 'Thứ năm', 'Thứ sáu', 'Thứ bảy'] as const;
 
 function pad2(n: number): string {
   return n < 10 ? `0${n}` : `${n}`;
@@ -39,26 +60,26 @@ export function toDateKey(date: Date): string {
 
 export function fromDateKey(key: string): Date {
   const [y, m, d] = key.split('-').map(Number);
-  return new Date(y, (m ?? 1) - 1, d ?? 1);
+  return new Date(y ?? 1970, (m ?? 1) - 1, d ?? 1);
 }
 
+/** "Thứ 5" · "Thu" · "목" */
 export function weekdayShort(date: Date): string {
-  return WEEKDAYS_SHORT[date.getDay()];
+  return dateFormat('wd', { weekday: 'short' }).format(date);
 }
 
-/** "Thứ ba, 18/11" */
+const LONG_DATE: Record<Language, Intl.DateTimeFormatOptions> = {
+  vi: { weekday: 'long', day: '2-digit', month: '2-digit' }, // Thứ Năm, 19/11
+  en: { weekday: 'short', month: 'short', day: 'numeric' }, // Thu, Nov 19
+  ko: { month: 'long', day: 'numeric', weekday: 'short' }, // 11월 19일 (목)
+};
+
 export function formatDateLong(key: string): string {
-  const date = fromDateKey(key);
-  return `${WEEKDAYS_LONG[date.getDay()]}, ${pad2(date.getDate())}/${pad2(date.getMonth() + 1)}`;
+  const lang = currentLanguage();
+  return dateFormat(`long-${lang}`, LONG_DATE[lang]).format(fromDateKey(key));
 }
 
-/** "18/11" */
+/** "19/11" · "11/19" · "11. 19." */
 export function formatDayMonth(key: string): string {
-  const date = fromDateKey(key);
-  return `${pad2(date.getDate())}/${pad2(date.getMonth() + 1)}`;
-}
-
-export function formatTime(iso: string): string {
-  const d = new Date(iso);
-  return `${pad2(d.getHours())}:${pad2(d.getMinutes())}`;
+  return dateFormat('dm', { day: '2-digit', month: '2-digit' }).format(fromDateKey(key));
 }

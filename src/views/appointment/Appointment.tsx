@@ -5,8 +5,7 @@ import { FlatList, type ListRenderItem, RefreshControl, StyleSheet, View } from 
 import { AppointmentListItem } from '@/components/appointment/AppointmentListItem';
 import { DialogConfirm } from '@/components/common/DialogConfirm';
 import { AppText, Button, EmptyState, ErrorState, IconButton, Screen, Skeleton } from '@/components/ui';
-import { SERVICE_MAP } from '@/constants/appointment';
-import { strings } from '@/constants/strings';
+import { useTranslation } from 'react-i18next';
 import { useAppointments, useCancelAppointment } from '@/hooks/services/useAppointments';
 import { haptic } from '@/hooks/useHaptic';
 import { colors, radius, spacing } from '@/theme/theme';
@@ -17,6 +16,7 @@ const keyExtractor = (a: AppointmentModel) => a.id;
 const Separator = () => <View style={styles.separator} />;
 
 export default function Appointment() {
+  const { t } = useTranslation();
   const router = useRouter();
   const { data, isPending, isError, error, refetch, isRefetching } = useAppointments();
   const cancel = useCancelAppointment();
@@ -57,13 +57,13 @@ export default function Appointment() {
     <View style={styles.header}>
       <View style={styles.headerText}>
         <AppText variant="heading" tone="navy" accessibilityRole="header">
-          {strings.appointment.title}
+          {t('appointment.title')}
         </AppText>
         <AppText variant="body" tone="secondary">
-          {strings.appointment.subtitle}
+          {t('appointment.subtitle')}
         </AppText>
       </View>
-      <IconButton icon="add" variant="primary" onPress={goBook} accessibilityLabel={strings.appointment.book} />
+      <IconButton icon="add" variant="primary" onPress={goBook} accessibilityLabel={t('appointment.book')} />
     </View>
   );
 
@@ -92,7 +92,7 @@ export default function Appointment() {
               {header}
               {appointments.length > 0 ? (
                 <AppText variant="caption" tone="secondary" style={styles.section}>
-                  {strings.appointment.upcoming} · {strings.appointment.swipeHint}
+                  {t('appointment.upcoming')} · {t('appointment.swipeHint')}
                 </AppText>
               ) : null}
             </>
@@ -100,9 +100,9 @@ export default function Appointment() {
           ListEmptyComponent={
             <EmptyState
               emoji="📅"
-              title={strings.appointment.emptyTitle}
-              description={strings.appointment.emptyBody}
-              actionLabel={strings.appointment.bookNow}
+              title={t('appointment.emptyTitle')}
+              description={t('appointment.emptyBody')}
+              actionLabel={t('appointment.bookNow')}
               onAction={goBook}
             />
           }
@@ -116,25 +116,21 @@ export default function Appointment() {
 
       {appointments.length > 0 ? (
         <View style={styles.footer}>
-          <Button title={strings.appointment.book} icon="calendar" onPress={goBook} />
+          <Button title={t('appointment.book')} icon="calendar" onPress={goBook} />
         </View>
       ) : null}
 
       <DialogConfirm
         visible={target !== null}
         emoji="📅"
-        title={strings.appointment.cancelTitle}
+        title={t('appointment.cancelTitle')}
         message={
           target
-            ? strings.appointment.cancelBody(
-                SERVICE_MAP[target.serviceId].name,
-                target.petName,
-                strings.appointment.at(target.time, formatDateLong(target.date)),
-              )
+            ? t('appointment.cancelBody', { service: t(`appointment.services.${target.serviceId}.name`), pet: target.petName, when: t('appointment.at', { time: target.time, date: formatDateLong(target.date) }) })
             : undefined
         }
-        confirmLabel={strings.appointment.cancelConfirm}
-        cancelLabel={strings.appointment.keep}
+        confirmLabel={t('appointment.cancel')}
+        cancelLabel={t('appointment.keep')}
         destructive
         onConfirm={confirmCancel}
         onCancel={dismiss}

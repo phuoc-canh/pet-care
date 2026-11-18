@@ -14,8 +14,9 @@ const IDLE_TIMEOUT_MS = 20_000;
 const MAX_HISTORY = 20;
 const MAX_CHARS = 1000;
 
-function buildBody({ pet, history }: Pick<SendMessageParams, 'pet' | 'history'>): ChatRequestBody {
+function buildBody({ pet, history, language }: Pick<SendMessageParams, 'pet' | 'history' | 'language'>): ChatRequestBody {
   return {
+    lang: language,
     pet: {
       name: pet.name,
       species: pet.species,
@@ -33,7 +34,7 @@ function buildBody({ pet, history }: Pick<SendMessageParams, 'pet' | 'history'>)
  * Nếu môi trường không trả `response.body` → đọc toàn bộ text rồi parse một lần
  * (UI vẫn "gõ chữ" mượt nhờ bộ đệm theo frame ở useChatStream).
  */
-async function streamFromWorker({ pet, history, signal, onToken }: SendMessageParams): Promise<void> {
+async function streamFromWorker({ pet, history, language, signal, onToken }: SendMessageParams): Promise<void> {
   const tc = createTimeoutController(FIRST_TOKEN_TIMEOUT_MS, signal);
   let received = false;
   const parser = createSseParser({
@@ -48,7 +49,7 @@ async function streamFromWorker({ pet, history, signal, onToken }: SendMessagePa
     const res = await expoFetch(env.aiUrl, {
       method: 'POST',
       headers: buildHeaders({ Accept: 'text/event-stream' }),
-      body: JSON.stringify(buildBody({ pet, history })),
+      body: JSON.stringify(buildBody({ pet, history, language })),
       signal: tc.signal,
     });
     if (!res.ok) throw await errorFromResponse(res);
@@ -81,9 +82,9 @@ async function streamFromWorker({ pet, history, signal, onToken }: SendMessagePa
 }
 
 /** Phát câu trả lời mock theo từng cụm nhỏ để trải nghiệm giống AI thật. */
-async function streamOffline({ pet, history, signal, onToken }: SendMessageParams): Promise<void> {
+async function streamOffline({ pet, history, language, signal, onToken }: SendMessageParams): Promise<void> {
   const question = [...history].reverse().find((m) => m.role === 'user')?.content ?? '';
-  const answer = mockAnswer(pet, question);
+  const answer = mockAnswer(pet, question, language);
   await sleep(450);
   const parts = answer.match(/\S+\s*/g) ?? [answer];
   for (let i = 0; i < parts.length; i += 3) {

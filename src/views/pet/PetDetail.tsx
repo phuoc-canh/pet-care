@@ -7,8 +7,8 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { DialogDeletePet } from '@/components/pet/DialogDeletePet';
 import { PetCardSkeleton } from '@/components/pet/PetCard';
 import { AppText, Avatar, Button, Card, ErrorState, IconButton, Pill } from '@/components/ui';
-import { PERSONALITY_LABEL, SPECIES_MAP } from '@/constants/pet';
-import { strings } from '@/constants/strings';
+import { SPECIES_EMOJI } from '@/constants/pet';
+import { useTranslation } from 'react-i18next';
 import { useDeletePet, usePet } from '@/hooks/services/usePets';
 import { haptic } from '@/hooks/useHaptic';
 import { useAppStore } from '@/store/app.store';
@@ -30,6 +30,7 @@ function InfoRow({ label, value }: { label: string; value: string }) {
 }
 
 export default function PetDetail() {
+  const { t } = useTranslation();
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const insets = useSafeAreaInsets();
@@ -67,11 +68,11 @@ export default function PetDetail() {
   return (
     <View style={[styles.root, { paddingTop: insets.top }]}>
       <View style={styles.topBar}>
-        <IconButton icon="chevron-back" onPress={goBack} accessibilityLabel={strings.common.back} />
+        <IconButton icon="chevron-back" onPress={goBack} accessibilityLabel={t('common.back')} />
         <AppText variant="subtitle" accessibilityRole="header">
-          {strings.petDetail.title}
+          {t('pet.detail.title')}
         </AppText>
-        <IconButton icon="create-outline" onPress={goEdit} accessibilityLabel={strings.petDetail.edit} disabled={!pet} />
+        <IconButton icon="create-outline" onPress={goEdit} accessibilityLabel={t('pet.detail.edit')} disabled={!pet} />
       </View>
 
       {isPending ? (
@@ -87,37 +88,37 @@ export default function PetDetail() {
             <AppText variant="heading" tone="navy">
               {pet.name}
             </AppText>
-            <Pill label={`${SPECIES_MAP[pet.species].emoji} ${SPECIES_MAP[pet.species].label}`} tone="soft" />
+            <Pill label={`${SPECIES_EMOJI[pet.species]} ${t(`pet.species.${pet.species}`)}`} tone="soft" />
           </Animated.View>
 
           <Animated.View entering={FadeInDown.delay(60).duration(260)}>
             <Card>
-              <Pill label={strings.petDetail.info} icon="information-circle" />
+              <Pill label={t('pet.detail.info')} icon="information-circle" />
               <View style={styles.infoList}>
-                <InfoRow label={strings.petHome.breed} value={pet.breed} />
+                <InfoRow label={t('pet.home.breed')} value={pet.breed} />
                 <View style={styles.sep} />
-                <InfoRow label={strings.petHome.age} value={formatAge(pet.ageYears)} />
+                <InfoRow label={t('pet.home.age')} value={formatAge(pet.ageYears)} />
                 <View style={styles.sep} />
-                <InfoRow label={strings.petHome.weight} value={formatWeight(pet.weightKg)} />
+                <InfoRow label={t('pet.home.weight')} value={formatWeight(pet.weightKg)} />
               </View>
             </Card>
           </Animated.View>
 
           <Animated.View entering={FadeInDown.delay(120).duration(260)}>
             <Card>
-              <Pill label={strings.petHome.personality} icon="sparkles" />
+              <Pill label={t('pet.home.personality')} icon="sparkles" />
               <View style={styles.tags}>
                 {pet.personalities.map((p) => (
-                  <Pill key={p} label={PERSONALITY_LABEL[p]} tone="soft" />
+                  <Pill key={p} label={t(`pet.personality.${p}`)} tone="soft" />
                 ))}
               </View>
             </Card>
           </Animated.View>
 
           <View style={styles.actions}>
-            <Button title={strings.petDetail.askAi(pet.name)} icon="chatbubble-ellipses" onPress={goChat} />
-            <Button title={strings.petDetail.edit} variant="secondary" icon="create-outline" onPress={goEdit} />
-            <Button title={strings.petDetail.delete} variant="ghost" icon="trash-outline" onPress={openConfirm} />
+            <Button title={t('pet.detail.askAi', { name: pet.name })} icon="chatbubble-ellipses" onPress={goChat} />
+            <Button title={t('pet.detail.edit')} variant="secondary" icon="create-outline" onPress={goEdit} />
+            <Button title={t('pet.detail.delete')} variant="ghost" icon="trash-outline" onPress={openConfirm} />
           </View>
         </ScrollView>
       )}

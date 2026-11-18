@@ -19,13 +19,24 @@ import Animated, {
 } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { LanguagePills } from '@/components/common/LanguageSheet';
 import { AppText, Button } from '@/components/ui';
-import { strings } from '@/constants/strings';
+import { useTranslation } from 'react-i18next';
 import { haptic } from '@/hooks/useHaptic';
+import { useLanguage } from '@/hooks/useLanguage';
 import { useAppStore } from '@/store/app.store';
 import { colors, radius, spacing } from '@/theme/theme';
 
-type Slide = (typeof strings.onboarding.slides)[number];
+interface Slide {
+  key: 'slide1' | 'slide2' | 'slide3';
+  emoji: string;
+}
+
+const SLIDES: Slide[] = [
+  { key: 'slide1', emoji: '🐾' },
+  { key: 'slide2', emoji: '💬' },
+  { key: 'slide3', emoji: '📅' },
+];
 
 const AnimatedFlatList = Animated.createAnimatedComponent(FlatList<Slide>);
 
@@ -54,13 +65,15 @@ function SlideTitle({ title, highlight }: { title: string; highlight: string }) 
 }
 
 export default function Onboarding() {
+  const { t } = useTranslation();
   const { width } = useWindowDimensions();
   const insets = useSafeAreaInsets();
   const completeOnboarding = useAppStore((s) => s.completeOnboarding);
+  const { language, setLanguage } = useLanguage();
   const listRef = useRef<FlatList<Slide>>(null);
   const [index, setIndex] = useState(0);
   const scrollX = useSharedValue(0);
-  const slides = strings.onboarding.slides;
+  const slides = SLIDES;
   const isLast = index === slides.length - 1;
 
   const onScroll = useAnimatedScrollHandler((e) => {
@@ -92,23 +105,28 @@ export default function Onboarding() {
             {item.emoji}
           </Text>
         </LinearGradient>
-        <SlideTitle title={item.title} highlight={item.highlight} />
+        <SlideTitle title={t(`onboarding.${item.key}.title`)} highlight={t(`onboarding.${item.key}.highlight`)} />
         <AppText variant="bodyStrong" tone="secondary" center style={styles.body}>
-          {item.body}
+          {t(`onboarding.${item.key}.body`)}
         </AppText>
+        {item.key === 'slide1' ? (
+          <View style={styles.language}>
+            <LanguagePills value={language} onSelect={setLanguage} />
+          </View>
+        ) : null}
       </View>
     ),
-    [width],
+    [language, setLanguage, t, width],
   );
 
   return (
     <View style={[styles.root, { paddingTop: insets.top, paddingBottom: Math.max(insets.bottom, spacing.md) }]}>
       <View style={styles.topRow}>
         <AppText variant="subtitle" tone="primary">
-          🐾 {strings.appName}
+          🐾 {t('common.appName')}
         </AppText>
         {!isLast ? (
-          <Button title={strings.onboarding.skip} variant="ghost" fullWidth={false} onPress={finish} />
+          <Button title={t('onboarding.skip')} variant="ghost" fullWidth={false} onPress={finish} />
         ) : (
           <View style={styles.skipPlaceholder} />
         )}
@@ -117,7 +135,8 @@ export default function Onboarding() {
       <AnimatedFlatList
         ref={listRef}
         data={slides}
-        keyExtractor={(item) => item.title}
+        extraData={language}
+        keyExtractor={(item) => item.key}
         renderItem={renderItem}
         style={styles.list}
         horizontal
@@ -133,10 +152,10 @@ export default function Onboarding() {
       <View style={styles.footer}>
         <View style={styles.dots}>
           {slides.map((s, i) => (
-            <Dot key={s.title} index={i} scrollX={scrollX} width={width} />
+            <Dot key={s.key} index={i} scrollX={scrollX} width={width} />
           ))}
         </View>
-        <Button title={isLast ? strings.onboarding.start : strings.onboarding.next} onPress={next} />
+        <Button title={isLast ? t('onboarding.start') : t('onboarding.next')} onPress={next} />
       </View>
     </View>
   );
@@ -153,6 +172,7 @@ const styles = StyleSheet.create({
   },
   skipPlaceholder: { height: 52 },
   list: { flex: 1 },
+  language: { marginTop: spacing.md },
   slide: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: spacing.xl, gap: spacing.md },
   illustration: {
     width: 220,

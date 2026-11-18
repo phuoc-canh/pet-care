@@ -1,4 +1,5 @@
-import { SEED_PETS } from '@/data/seed';
+import { localizeSeedPet, seedPets } from '@/data/seed';
+import { currentLanguage } from '@/i18n';
 import { AppError } from '@/libs/http';
 import { STORAGE_KEYS, storage } from '@/libs/storage';
 import type { CreatePetInput, Pet, UpdatePetInput } from '@/types/services-type/pet.type';
@@ -13,8 +14,14 @@ import { createId, mockLatency, nowIso } from '@/utils/helpers';
 async function readAll(): Promise<Pet[]> {
   const stored = await storage.get<Pet[]>(STORAGE_KEYS.pets);
   if (stored) return stored;
-  await storage.set(STORAGE_KEYS.pets, SEED_PETS);
-  return SEED_PETS;
+  const seed = seedPets(currentLanguage());
+  await storage.set(STORAGE_KEYS.pets, seed);
+  return seed;
+}
+
+/** Như backend trả dữ liệu theo Accept-Language: thú cưng mẫu chưa sửa → giống theo ngôn ngữ hiện tại. */
+function localize(pet: Pet): Pet {
+  return localizeSeedPet(pet, currentLanguage());
 }
 
 async function writeAll(pets: Pet[]): Promise<void> {
@@ -23,14 +30,14 @@ async function writeAll(pets: Pet[]): Promise<void> {
 
 async function getAll(): Promise<Pet[]> {
   await mockLatency();
-  return readAll();
+  return (await readAll()).map(localize);
 }
 
 async function getById(id: string): Promise<Pet> {
   await mockLatency();
   const pet = (await readAll()).find((p) => p.id === id);
   if (!pet) throw new AppError('NOT_FOUND');
-  return pet;
+  return localize(pet);
 }
 
 async function create(input: CreatePetInput): Promise<Pet> {

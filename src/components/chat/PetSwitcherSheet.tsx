@@ -5,8 +5,7 @@ import Animated, { FadeIn, SlideInDown } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { AppText, Avatar, PressableScale } from '@/components/ui';
-import { SPECIES_MAP } from '@/constants/pet';
-import { strings } from '@/constants/strings';
+import { useTranslation } from 'react-i18next';
 import { haptic } from '@/hooks/useHaptic';
 import { colors, layout, radius, spacing } from '@/theme/theme';
 import type { Pet } from '@/types/services-type/pet.type';
@@ -18,6 +17,7 @@ interface RowProps {
 }
 
 const Row = memo(function Row({ pet, selected, onPick }: RowProps) {
+  const { t } = useTranslation();
   const handlePress = useCallback(() => onPick(pet.id), [onPick, pet.id]);
   return (
     <PressableScale
@@ -31,7 +31,7 @@ const Row = memo(function Row({ pet, selected, onPick }: RowProps) {
       <View style={styles.rowText}>
         <AppText variant="bodyStrong">{pet.name}</AppText>
         <AppText variant="caption" tone="secondary">
-          {SPECIES_MAP[pet.species].label} · {pet.breed}
+          {t(`pet.species.${pet.species}`)} · {pet.breed}
         </AppText>
       </View>
       {selected ? <Ionicons name="checkmark-circle" size={24} color={colors.primary} /> : null}
@@ -49,6 +49,7 @@ export interface PetSwitcherSheetProps {
 
 /** Bottom sheet chọn thú cưng ngay tại header chat. */
 function PetSwitcherSheetBase({ visible, pets, selectedId, onSelect, onClose }: PetSwitcherSheetProps) {
+  const { t } = useTranslation();
   const insets = useSafeAreaInsets();
   const pick = useCallback(
     (id: string) => {
@@ -62,14 +63,14 @@ function PetSwitcherSheetBase({ visible, pets, selectedId, onSelect, onClose }: 
   return (
     <Modal visible={visible} transparent animationType="none" statusBarTranslucent onRequestClose={onClose}>
       <Animated.View entering={FadeIn.duration(180)} style={styles.backdrop}>
-        <Pressable style={StyleSheet.absoluteFill} onPress={onClose} accessibilityLabel={strings.common.close} />
+        <Pressable style={StyleSheet.absoluteFill} onPress={onClose} accessibilityLabel={t('common.close')} />
         <Animated.View
           entering={SlideInDown.springify().damping(20)}
           style={[styles.sheet, { paddingBottom: insets.bottom + spacing.md }]}
         >
           <View style={styles.grabber} />
           <AppText variant="subtitle" accessibilityRole="header" style={styles.title}>
-            {strings.chat.pickPetTitle}
+            {t('chat.pickPetTitle')}
           </AppText>
           <View style={styles.list}>
             {pets.map((p) => (

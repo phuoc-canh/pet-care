@@ -1,10 +1,10 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
-import { memo, useCallback, useState } from 'react';
+import { type ComponentRef, memo, useCallback, useRef, useState } from 'react';
 import { Platform, StyleSheet, TextInput, View } from 'react-native';
 import Animated, { ZoomIn } from 'react-native-reanimated';
 
 import { PressableScale } from '@/components/ui';
-import { strings } from '@/constants/strings';
+import { useTranslation } from 'react-i18next';
 import { colors, layout, radius, spacing } from '@/theme/theme';
 
 const LINE_HEIGHT = 20;
@@ -21,25 +21,39 @@ export interface ChatInputProps {
 }
 
 /**
- * Ô nhập tự giãn tối đa 4 dòng. State text nằm cục bộ ở đây → gõ phím không làm
- * re-render danh sách chat. Khi đang stream, nút gửi biến thành nút "Dừng".
+ * Ô nhập tự giãn tối đa 4 dòng; khi đang stream, nút gửi biến thành nút "Dừng".
+ *
+ * UNCONTROLLED (không truyền `value`): bàn phím tiếng Hàn/Nhật/Trung ghép ký tự (IME composition)
+ * — nếu JS set lại `value` mỗi phím, phần đang ghép có thể bị ngắt/nhân đôi chữ trên iOS.
+ * Text giữ trong ref; state chỉ đổi khi ô chuyển giữa rỗng ↔ có chữ (để bật/tắt nút gửi),
+ * nên gõ phím gần như không gây re-render.
  */
 function ChatInputBase({ placeholder, isStreaming, disabled = false, onSend, onStop }: ChatInputProps) {
-  const [text, setText] = useState('');
-  const canSend = text.trim().length > 0 && !disabled && !isStreaming;
+  const { t } = useTranslation();
+  const inputRef = useRef<ComponentRef<typeof TextInput>>(null);
+  const textRef = useRef('');
+  const [hasText, setHasText] = useState(false);
+  const canSend = hasText && !disabled && !isStreaming;
+
+  const handleChange = useCallback((value: string) => {
+    textRef.current = value;
+    setHasText(value.trim().length > 0); // React bỏ qua nếu giá trị không đổi
+  }, []);
 
   const handleSend = useCallback(() => {
     if (!canSend) return;
-    onSend(text);
-    setText('');
-  }, [canSend, onSend, text]);
+    onSend(textRef.current);
+    textRef.current = '';
+    inputRef.current?.clear();
+    setHasText(false);
+  }, [canSend, onSend]);
 
   return (
     <View style={styles.container}>
       <View style={styles.field}>
         <TextInput
-          value={text}
-          onChangeText={setText}
+          ref={inputRef}
+          onChangeText={handleChange}
           placeholder={placeholder}
           placeholderTextColor={colors.textMuted}
           multiline
@@ -56,7 +70,7 @@ function ChatInputBase({ placeholder, isStreaming, disabled = false, onSend, onS
           <PressableScale
             onPress={onStop}
             accessibilityRole="button"
-            accessibilityLabel={strings.chat.stop}
+            accessibilityLabel={t('chat.stop')}
             hitSlop={layout.hitSlop}
             style={[styles.button, styles.stop]}
           >
@@ -68,7 +82,7 @@ function ChatInputBase({ placeholder, isStreaming, disabled = false, onSend, onS
           onPress={handleSend}
           disabled={!canSend}
           accessibilityRole="button"
-          accessibilityLabel={strings.chat.send}
+          accessibilityLabel={t('chat.send')}
           accessibilityState={{ disabled: !canSend }}
           hitSlop={layout.hitSlop}
           style={[styles.button, canSend ? styles.send : styles.sendDisabled]}

@@ -2,7 +2,7 @@ import { memo, useCallback } from 'react';
 import { StyleSheet, View } from 'react-native';
 
 import { AppText, PressableScale, Skeleton } from '@/components/ui';
-import { strings } from '@/constants/strings';
+import { useTranslation } from 'react-i18next';
 import { haptic } from '@/hooks/useHaptic';
 import { colors, layout, radius, spacing } from '@/theme/theme';
 
@@ -14,6 +14,7 @@ interface SlotProps {
 }
 
 const Slot = memo(function Slot({ time, busy, selected, onSelect }: SlotProps) {
+  const { t } = useTranslation();
   const handlePress = useCallback(() => {
     haptic.selection();
     onSelect(time);
@@ -24,7 +25,7 @@ const Slot = memo(function Slot({ time, busy, selected, onSelect }: SlotProps) {
       disabled={busy}
       accessibilityRole="radio"
       accessibilityState={{ selected, disabled: busy }}
-      accessibilityLabel={strings.appointment.slotLabel(time, busy)}
+      accessibilityLabel={busy ? t('appointment.slotBusyLabel', { time }) : time}
       style={[styles.slot, selected && styles.selected, busy && styles.busy]}
     >
       <AppText
@@ -36,7 +37,7 @@ const Slot = memo(function Slot({ time, busy, selected, onSelect }: SlotProps) {
       </AppText>
       {busy ? (
         <AppText variant="caption" tone="muted">
-          {strings.appointment.slotBusy}
+          {t('appointment.slotBusy')}
         </AppText>
       ) : null}
     </PressableScale>

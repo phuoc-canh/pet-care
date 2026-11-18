@@ -1,6 +1,6 @@
 import { SERVICE_MAP, TIME_SLOTS } from '@/constants/appointment';
-import { strings } from '@/constants/strings';
-import { SEED_PETS } from '@/data/seed';
+import { SEED_PET_IDS } from '@/data/seed';
+import { i18n } from '@/i18n';
 import { AppError } from '@/libs/http';
 import { STORAGE_KEYS, storage } from '@/libs/storage';
 import type { Appointment, CreateAppointmentInput } from '@/types/services-type/appointment.type';
@@ -16,7 +16,7 @@ function addDays(days: number): string {
 }
 
 function seedAppointments(): Appointment[] {
-  const pet = SEED_PETS[0];
+  const pet = SEED_PET_IDS[0] ?? { id: 'pet_milo', name: 'Milo' };
   const now = nowIso();
   return [
     {
@@ -81,7 +81,7 @@ async function create(input: CreateAppointmentInput): Promise<Appointment> {
   await mockLatency();
   const all = await readAll();
   const taken = othersBusy(input.date).includes(input.time) || all.some((a) => a.date === input.date && a.time === input.time);
-  if (taken) throw new AppError('BAD_REQUEST', strings.appointment.slotTaken);
+  if (taken) throw new AppError('BAD_REQUEST', i18n.t('appointment.slotTaken'));
   const now = nowIso();
   const created: Appointment = { ...input, id: createId('apt_'), createdAt: now, updatedAt: now };
   await storage.set(STORAGE_KEYS.appointments, [...all, created]);

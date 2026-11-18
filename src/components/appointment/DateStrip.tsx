@@ -1,10 +1,11 @@
 import { memo, useCallback, useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import { ScrollView, StyleSheet } from 'react-native';
 
 import { AppText, PressableScale } from '@/components/ui';
 import { BOOKING_DAYS } from '@/constants/appointment';
-import { strings } from '@/constants/strings';
 import { haptic } from '@/hooks/useHaptic';
+import { i18n } from '@/i18n';
 import { colors, radius, shadow, spacing } from '@/theme/theme';
 import { formatDateLong, toDateKey, weekdayShort } from '@/utils/format';
 
@@ -19,7 +20,7 @@ export function nextDays(count = BOOKING_DAYS): DayItem[] {
   const today = new Date();
   return Array.from({ length: count }, (_, i) => {
     const d = new Date(today.getFullYear(), today.getMonth(), today.getDate() + i);
-    return { key: toDateKey(d), weekday: i === 0 ? strings.appointment.today : weekdayShort(d), day: d.getDate() };
+    return { key: toDateKey(d), weekday: i === 0 ? i18n.t('appointment.today') : weekdayShort(d), day: d.getDate() };
   });
 }
 
@@ -52,7 +53,9 @@ export interface DateStripProps {
 }
 
 function DateStripBase({ value, onChange }: DateStripProps) {
-  const days = useMemo(() => nextDays(), []);
+  const { i18n: i18nInstance } = useTranslation();
+  // language trong deps → đổi ngôn ngữ là tên thứ đổi theo.
+  const days = useMemo(() => (i18nInstance.language ? nextDays() : []), [i18nInstance.language]);
   return (
     <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.row} accessibilityRole="radiogroup">
       {days.map((d) => (

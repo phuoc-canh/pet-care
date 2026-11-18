@@ -3,7 +3,7 @@ import { Modal, Pressable, StyleSheet, Text, View } from 'react-native';
 import Animated, { FadeIn, ZoomIn } from 'react-native-reanimated';
 
 import { AppText, Button } from '@/components/ui';
-import { strings } from '@/constants/strings';
+import { useTranslation } from 'react-i18next';
 import { colors, radius, shadow, spacing } from '@/theme/theme';
 
 export interface DialogConfirmProps {
@@ -25,13 +25,14 @@ function DialogConfirmBase({
   title,
   message,
   emoji,
-  confirmLabel = strings.common.confirm,
-  cancelLabel = strings.common.cancel,
+  confirmLabel,
+  cancelLabel,
   destructive = false,
   loading = false,
   onConfirm,
   onCancel,
 }: DialogConfirmProps) {
+  const { t } = useTranslation();
   return (
     <Modal visible={visible} transparent animationType="fade" statusBarTranslucent onRequestClose={onCancel}>
       <Animated.View entering={FadeIn.duration(180)} style={styles.backdrop}>
@@ -54,12 +55,12 @@ function DialogConfirmBase({
           ) : null}
           <View style={styles.actions}>
             <Button
-              title={confirmLabel}
+              title={confirmLabel ?? t('common.confirm')}
               variant={destructive ? 'danger' : 'primary'}
               loading={loading}
               onPress={onConfirm}
             />
-            <Button title={cancelLabel} variant="ghost" onPress={onCancel} disabled={loading} />
+            <Button title={cancelLabel ?? t('common.cancel')} variant="ghost" onPress={onCancel} disabled={loading} />
           </View>
         </Animated.View>
       </Animated.View>

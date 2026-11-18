@@ -1,7 +1,7 @@
 import { memo } from 'react';
 import { StyleSheet, type StyleProp, type ViewStyle } from 'react-native';
 
-import { strings } from '@/constants/strings';
+import { useTranslation } from 'react-i18next';
 
 import { EmptyState } from './EmptyState';
 
@@ -12,12 +12,13 @@ export interface ErrorStateProps {
 }
 
 function ErrorStateBase({ message, onRetry, style }: ErrorStateProps) {
+  const { t } = useTranslation();
   return (
     <EmptyState
       emoji="😿"
-      title={strings.error.title}
-      description={message ?? strings.error.generic}
-      actionLabel={onRetry ? strings.common.retry : undefined}
+      title={t('errors.title')}
+      description={message ?? t('errors.generic')}
+      actionLabel={onRetry ? t('common.retry') : undefined}
       onAction={onRetry}
       style={[styles.container, style]}
     />

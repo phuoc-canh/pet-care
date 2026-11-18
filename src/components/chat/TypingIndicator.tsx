@@ -13,7 +13,7 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 
-import { strings } from '@/constants/strings';
+import { useTranslation } from 'react-i18next';
 import { colors, shadow, spacing } from '@/theme/theme';
 
 function Dot({ progress }: { progress: SharedValue<number> }) {
@@ -47,12 +47,13 @@ function useBounce(delay: number) {
 
 /** 3 chấm nhún khi đang chờ token đầu tiên (animation chạy trên UI thread). */
 function TypingIndicatorBase() {
+  const { t } = useTranslation();
   const a = useBounce(0);
   const b = useBounce(150);
   const c = useBounce(300);
   return (
     <Animated.View entering={FadeIn.duration(200)} style={styles.row}>
-      <View style={styles.bubble} accessible accessibilityLabel={strings.chat.typing} accessibilityLiveRegion="polite">
+      <View style={styles.bubble} accessible accessibilityLabel={t('chat.typing')} accessibilityLiveRegion="polite">
         <Dot progress={a} />
         <Dot progress={b} />
         <Dot progress={c} />

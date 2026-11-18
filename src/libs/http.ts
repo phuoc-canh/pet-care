@@ -1,4 +1,4 @@
-import { strings } from '@/constants/strings';
+import { i18n } from '@/i18n';
 import type { ApiErrorBody, AppErrorCode } from '@/types/services-type/common.type';
 import { isRecord } from '@/utils/helpers';
 
@@ -28,31 +28,23 @@ export class AppError extends Error {
   }
 }
 
+const MESSAGE_KEY = {
+  NETWORK: 'errors.network',
+  TIMEOUT: 'errors.timeout',
+  UNAUTHORIZED: 'errors.unauthorized',
+  NO_CREDIT: 'errors.noCredit',
+  RATE_LIMITED: 'errors.rateLimited',
+  NOT_FOUND: 'errors.notFound',
+  BAD_REQUEST: 'errors.badRequest',
+  SERVER: 'errors.server',
+  MISSING_CONFIG: 'errors.missingConfig',
+  ABORTED: 'errors.generic',
+  UNKNOWN: 'errors.generic',
+} as const satisfies Record<AppErrorCode, string>;
+
+/** Thông điệp thân thiện theo ngôn ngữ đang chọn. */
 export function messageForCode(code: AppErrorCode): string {
-  const e = strings.error;
-  switch (code) {
-    case 'NETWORK':
-      return e.network;
-    case 'TIMEOUT':
-      return e.timeout;
-    case 'UNAUTHORIZED':
-      return e.unauthorized;
-    case 'NO_CREDIT':
-      return e.noCredit;
-    case 'RATE_LIMITED':
-      return e.rateLimited;
-    case 'NOT_FOUND':
-      return e.notFound;
-    case 'BAD_REQUEST':
-      return e.badRequest;
-    case 'SERVER':
-      return e.server;
-    case 'MISSING_CONFIG':
-      return e.missingConfig;
-    case 'ABORTED':
-    case 'UNKNOWN':
-      return e.generic;
-  }
+  return i18n.t(MESSAGE_KEY[code]);
 }
 
 export function codeFromStatus(status: number): AppErrorCode {

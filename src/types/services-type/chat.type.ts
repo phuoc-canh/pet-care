@@ -1,3 +1,5 @@
+import type { Language } from '@/i18n/languages';
+
 import type { AppErrorCode } from './common.type';
 import type { Pet } from './pet.type';
 
@@ -21,12 +23,15 @@ export interface ChatMessage {
 export type PetProfilePayload = Pick<Pet, 'name' | 'species' | 'breed' | 'ageYears' | 'weightKg' | 'personalities'>;
 
 export interface ChatRequestBody {
+  /** Ngôn ngữ giao diện — AI dùng làm mặc định, nhưng ưu tiên ngôn ngữ người dùng đang gõ. */
+  lang: Language;
   pet: PetProfilePayload;
   messages: { role: ChatRole; content: string }[];
 }
 
 export interface SendMessageParams {
   pet: Pet;
+  language: Language;
   /** Lịch sử đã gồm tin user mới nhất ở cuối. */
   history: Pick<ChatMessage, 'role' | 'content'>[];
   signal?: AbortSignal;

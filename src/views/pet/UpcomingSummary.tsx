@@ -5,7 +5,7 @@ import { StyleSheet, View } from 'react-native';
 import { QuickActionCard } from '@/components/pet/QuickActionCard';
 import { AppText, Skeleton } from '@/components/ui';
 import { SERVICE_MAP } from '@/constants/appointment';
-import { strings } from '@/constants/strings';
+import { useTranslation } from 'react-i18next';
 import { useAppointments } from '@/hooks/services/useAppointments';
 import { colors, radius, spacing } from '@/theme/theme';
 import { formatDateLong } from '@/utils/format';
@@ -17,15 +17,16 @@ interface UpcomingSummaryProps {
 
 /** Card "Lịch hẹn sắp tới" trên Home: lịch gần nhất của thú cưng đang chọn. */
 function UpcomingSummaryBase({ petId, onPress }: UpcomingSummaryProps) {
+  const { t } = useTranslation();
   const { data, isPending } = useAppointments();
   const mine = useMemo(() => (data ?? []).filter((a) => a.petId === petId), [data, petId]);
   const next = mine[0];
 
   return (
     <QuickActionCard
-      tag={strings.petHome.upcomingTag}
-      title={strings.petHome.upcomingTitle}
-      description={!isPending && !next ? strings.petHome.upcomingEmpty : undefined}
+      tag={t('pet.home.upcomingTag')}
+      title={t('pet.home.upcomingTitle')}
+      description={!isPending && !next ? t('pet.home.upcomingEmpty') : undefined}
       icon="calendar"
       onPress={onPress}
     >
@@ -38,15 +39,15 @@ function UpcomingSummaryBase({ petId, onPress }: UpcomingSummaryProps) {
           </View>
           <View style={styles.flex}>
             <AppText variant="bodyStrong" numberOfLines={1}>
-              {SERVICE_MAP[next.serviceId].name}
+              {t(`appointment.services.${next.serviceId}.name`)}
             </AppText>
             <AppText variant="body" tone="secondary" numberOfLines={1}>
-              {strings.appointment.at(next.time, formatDateLong(next.date))}
+              {t('appointment.at', { time: next.time, date: formatDateLong(next.date) })}
             </AppText>
           </View>
           {mine.length > 1 ? (
             <AppText variant="caption" tone="primary" style={styles.more}>
-              {strings.petHome.upcomingMore(mine.length - 1)}
+              {t('pet.home.upcomingMore', { count: mine.length - 1 })}
             </AppText>
           ) : null}
         </View>
