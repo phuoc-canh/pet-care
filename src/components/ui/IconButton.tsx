@@ -1,5 +1,5 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
-import { memo, useCallback } from 'react';
+import { memo, useCallback, useRef } from 'react';
 import { Pressable, StyleSheet, type StyleProp, type ViewStyle } from 'react-native';
 
 import { haptic } from '@/hooks/useHaptic';
@@ -17,10 +17,12 @@ export interface IconButtonProps {
 }
 
 /**
- * Nút icon tròn. Cố ý dùng Pressable "trần" với style + kích thước đặt TRỰC TIẾP lên Pressable
- * (không bọc Animated.View, không hitSlop): trên iOS kiến trúc mới, Pressable không có style
- * bọc ngoài view có kích thước có thể bị flatten khiến vùng chạm không nhận. Kích thước 44×44
- * đã đạt chuẩn vùng chạm nên không cần hitSlop.
+ * Nút icon tròn 44×44.
+ *
+ * Kích hoạt ở onPressIn (ngón tay vừa chạm), không đợi onPress (nhấc tay):
+ * các nút này hay nằm sát mép trên màn hình — trên iPhone tai thỏ, iOS trì hoãn/HỦY chạm ở vùng
+ * này vì nghi là cử chỉ hệ thống (vuốt mở Control Center / Notification Center), khiến onPress
+ * lúc được lúc không. touchesBegan vẫn tới nên onPressIn luôn chạy. Có chặn bấm lặp 400ms.
  */
 function IconButtonBase({
   icon,
@@ -31,7 +33,11 @@ function IconButtonBase({
   size = layout.minTouch,
   style,
 }: IconButtonProps) {
-  const handlePress = useCallback(() => {
+  const lastRef = useRef(0);
+  const handlePressIn = useCallback(() => {
+    const now = Date.now();
+    if (now - lastRef.current < 400) return;
+    lastRef.current = now;
     haptic.light();
     onPress();
   }, [onPress]);
@@ -40,7 +46,12 @@ function IconButtonBase({
 
   return (
     <Pressable
-      onPress={handlePress}
+      onPressIn={handlePressIn}
+      // VoiceOver/TalkBack kích hoạt qua action "activate" (không phát onPressIn).
+      accessibilityActions={ACCESSIBILITY_ACTIONS}
+      onAccessibilityAction={(e) => {
+        if (e.nativeEvent.actionName === 'activate' && !disabled) onPress();
+      }}
       disabled={disabled}
       collapsable={false}
       accessibilityRole="button"
@@ -61,6 +72,8 @@ function IconButtonBase({
 }
 
 export const IconButton = memo(IconButtonBase);
+
+const ACCESSIBILITY_ACTIONS = [{ name: 'activate' as const }];
 
 const styles = StyleSheet.create({
   base: { borderRadius: radius.pill, alignItems: 'center', justifyContent: 'center' },

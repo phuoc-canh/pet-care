@@ -105,7 +105,7 @@ export default function AppointmentBook() {
   }, [book, date, effectiveTime, pet, service, t]);
 
   const when = effectiveTime ? t('appointment.at', { time: effectiveTime, date: formatDateLong(date) }) : '';
-  const topPad = Platform.OS === 'android' ? insets.top + spacing.xs : spacing.md;
+  const topPad = Platform.OS === 'android' ? insets.top + spacing.xs : spacing.xl;
 
   if (!pet) {
     return (

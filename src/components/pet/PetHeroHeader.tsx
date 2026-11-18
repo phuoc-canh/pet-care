@@ -20,7 +20,7 @@ function PetHeroHeaderBase({ petName, onLanguagePress, children }: PetHeroHeader
   const { t } = useTranslation();
   const insets = useSafeAreaInsets();
   return (
-    <LinearGradient colors={colors.heroGradientToBg} locations={GRADIENT_STOPS} style={[styles.container, { paddingTop: insets.top + spacing.md }]}>
+    <LinearGradient colors={colors.heroGradientToBg} locations={GRADIENT_STOPS} style={[styles.container, { paddingTop: insets.top + spacing.xl }]}>
       <View style={styles.text}>
         <View style={styles.topRow}>
           <AppText variant="body" tone="secondary" style={styles.greeting}>

@@ -105,7 +105,7 @@ export default function PetCreate() {
     >
       <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
         <View style={styles.flex}>
-          <View style={[styles.header, { paddingTop: Platform.OS === 'android' ? insets.top + spacing.xs : spacing.md }]}>
+          <View style={[styles.header, { paddingTop: Platform.OS === 'android' ? insets.top + spacing.xs : spacing.xl }]}>
             <View style={styles.grabber} />
             <View style={styles.headerRow}>
               <AppText variant="title" accessibilityRole="header">

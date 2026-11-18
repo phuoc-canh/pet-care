@@ -141,7 +141,7 @@ export default function Appointment() {
 
 const styles = StyleSheet.create({
   flex: { flex: 1 },
-  content: { padding: spacing.lg, paddingBottom: spacing.xxl, flexGrow: 1 },
+  content: { padding: spacing.lg, paddingTop: spacing.xl, paddingBottom: spacing.xxl, flexGrow: 1 },
   header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: spacing.lg, gap: spacing.sm },
   headerText: { flex: 1, gap: spacing.xxs },
   section: { fontWeight: '700', marginBottom: spacing.sm },
