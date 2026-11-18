@@ -9,6 +9,7 @@ import { PetSelector } from '@/components/pet/PetSelector';
 import { QuickActionCard } from '@/components/pet/QuickActionCard';
 import { EmptyState, ErrorState, Skeleton } from '@/components/ui';
 import { strings } from '@/constants/strings';
+import { useAppointments } from '@/hooks/services/useAppointments';
 import { usePrefetchPet } from '@/hooks/services/usePets';
 import { useSelectedPet } from '@/hooks/useSelectedPet';
 import { colors, spacing } from '@/theme/theme';
@@ -19,12 +20,16 @@ export default function PetHome() {
   const router = useRouter();
   const { query, pets, pet, selectPet } = useSelectedPet();
   const prefetchPet = usePrefetchPet();
+  const { refetch: refetchAppointments } = useAppointments();
 
   const goAdd = useCallback(() => router.push('/pet/new'), [router]);
   const goDetail = useCallback((id: string) => router.push({ pathname: '/pet/[id]', params: { id } }), [router]);
   const goChat = useCallback(() => router.navigate('/chat'), [router]);
   const goAppointment = useCallback(() => router.navigate('/appointment'), [router]);
-  const onRefresh = useCallback(() => void query.refetch(), [query]);
+  const onRefresh = useCallback(() => {
+    void query.refetch();
+    void refetchAppointments();
+  }, [query, refetchAppointments]);
 
   const isInitialLoading = query.isPending;
 
