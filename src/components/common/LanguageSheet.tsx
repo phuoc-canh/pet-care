@@ -1,10 +1,9 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { memo, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Modal, Pressable, StyleSheet, Text, View } from 'react-native';
-import Animated, { FadeIn, SlideInDown } from 'react-native-reanimated';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { StyleSheet, Text, View } from 'react-native';
 
+import { BottomSheet } from '@/components/common/BottomSheet';
 import { AppText, PressableScale } from '@/components/ui';
 import { type Language, LANGUAGES, type LanguageOption } from '@/i18n/languages';
 import { colors, layout, radius, spacing } from '@/theme/theme';
@@ -48,7 +47,6 @@ export interface LanguageSheetProps {
 /** Bottom sheet chọn ngôn ngữ: 🇻🇳 Tiếng Việt · 🇺🇸 English · 🇰🇷 한국어. */
 function LanguageSheetBase({ visible, value, onSelect, onClose }: LanguageSheetProps) {
   const { t } = useTranslation();
-  const insets = useSafeAreaInsets();
   const pick = useCallback(
     (code: Language) => {
       onSelect(code);
@@ -58,25 +56,13 @@ function LanguageSheetBase({ visible, value, onSelect, onClose }: LanguageSheetP
   );
 
   return (
-    <Modal visible={visible} transparent animationType="none" statusBarTranslucent onRequestClose={onClose}>
-      <Animated.View entering={FadeIn.duration(180)} style={styles.backdrop}>
-        <Pressable style={StyleSheet.absoluteFill} onPress={onClose} accessibilityLabel={t('common.close')} />
-        <Animated.View
-          entering={SlideInDown.springify().damping(20)}
-          style={[styles.sheet, { paddingBottom: insets.bottom + spacing.md }]}
-        >
-          <View style={styles.grabber} />
-          <AppText variant="subtitle" accessibilityRole="header" style={styles.title}>
-            {t('language.pick')}
-          </AppText>
-          <View style={styles.list} accessibilityRole="radiogroup">
-            {LANGUAGES.map((option) => (
-              <Row key={option.code} option={option} selected={option.code === value} onPick={pick} />
-            ))}
-          </View>
-        </Animated.View>
-      </Animated.View>
-    </Modal>
+    <BottomSheet visible={visible} title={t('language.pick')} onClose={onClose}>
+      <View style={styles.list} accessibilityRole="radiogroup">
+        {LANGUAGES.map((option) => (
+          <Row key={option.code} option={option} selected={option.code === value} onPick={pick} />
+        ))}
+      </View>
+    </BottomSheet>
   );
 }
 
@@ -113,23 +99,6 @@ function LanguagePillsBase({ value, onSelect }: { value: Language; onSelect: (co
 export const LanguagePills = memo(LanguagePillsBase);
 
 const styles = StyleSheet.create({
-  backdrop: { flex: 1, backgroundColor: colors.overlay, justifyContent: 'flex-end' },
-  sheet: {
-    backgroundColor: colors.background,
-    borderTopLeftRadius: radius.card,
-    borderTopRightRadius: radius.card,
-    paddingHorizontal: spacing.lg,
-    paddingTop: spacing.sm,
-  },
-  grabber: {
-    alignSelf: 'center',
-    width: 40,
-    height: 5,
-    borderRadius: 3,
-    backgroundColor: colors.border,
-    marginBottom: spacing.md,
-  },
-  title: { marginBottom: spacing.md },
   list: { gap: spacing.xs },
   row: {
     minHeight: layout.minTouch + 12,

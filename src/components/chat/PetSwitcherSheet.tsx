@@ -1,9 +1,8 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { memo, useCallback } from 'react';
-import { Modal, Pressable, StyleSheet, View } from 'react-native';
-import Animated, { FadeIn, SlideInDown } from 'react-native-reanimated';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { StyleSheet, View } from 'react-native';
 
+import { BottomSheet } from '@/components/common/BottomSheet';
 import { AppText, Avatar, PressableScale } from '@/components/ui';
 import { useTranslation } from 'react-i18next';
 import { haptic } from '@/hooks/useHaptic';
@@ -50,7 +49,6 @@ export interface PetSwitcherSheetProps {
 /** Bottom sheet chọn thú cưng ngay tại header chat. */
 function PetSwitcherSheetBase({ visible, pets, selectedId, onSelect, onClose }: PetSwitcherSheetProps) {
   const { t } = useTranslation();
-  const insets = useSafeAreaInsets();
   const pick = useCallback(
     (id: string) => {
       if (id !== selectedId) haptic.selection();
@@ -61,49 +59,19 @@ function PetSwitcherSheetBase({ visible, pets, selectedId, onSelect, onClose }: 
   );
 
   return (
-    <Modal visible={visible} transparent animationType="none" statusBarTranslucent onRequestClose={onClose}>
-      <Animated.View entering={FadeIn.duration(180)} style={styles.backdrop}>
-        <Pressable style={StyleSheet.absoluteFill} onPress={onClose} accessibilityLabel={t('common.close')} />
-        <Animated.View
-          entering={SlideInDown.springify().damping(20)}
-          style={[styles.sheet, { paddingBottom: insets.bottom + spacing.md }]}
-        >
-          <View style={styles.grabber} />
-          <AppText variant="subtitle" accessibilityRole="header" style={styles.title}>
-            {t('chat.pickPetTitle')}
-          </AppText>
-          <View style={styles.list}>
-            {pets.map((p) => (
-              <Row key={p.id} pet={p} selected={p.id === selectedId} onPick={pick} />
-            ))}
-          </View>
-        </Animated.View>
-      </Animated.View>
-    </Modal>
+    <BottomSheet visible={visible} title={t('chat.pickPetTitle')} onClose={onClose}>
+      <View style={styles.list}>
+        {pets.map((p) => (
+          <Row key={p.id} pet={p} selected={p.id === selectedId} onPick={pick} />
+        ))}
+      </View>
+    </BottomSheet>
   );
 }
 
 export const PetSwitcherSheet = memo(PetSwitcherSheetBase);
 
 const styles = StyleSheet.create({
-  backdrop: { flex: 1, backgroundColor: colors.overlay, justifyContent: 'flex-end' },
-  sheet: {
-    backgroundColor: colors.background,
-    borderTopLeftRadius: radius.card,
-    borderTopRightRadius: radius.card,
-    paddingHorizontal: spacing.lg,
-    paddingTop: spacing.sm,
-    maxHeight: '75%',
-  },
-  grabber: {
-    alignSelf: 'center',
-    width: 40,
-    height: 5,
-    borderRadius: 3,
-    backgroundColor: colors.border,
-    marginBottom: spacing.md,
-  },
-  title: { marginBottom: spacing.md },
   list: { gap: spacing.xs },
   row: {
     minHeight: layout.minTouch + 16,

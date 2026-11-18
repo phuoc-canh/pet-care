@@ -30,6 +30,7 @@ void i18n.use(initReactI18next).init({
   supportedLngs: ['vi', 'en', 'ko'],
   interpolation: { escapeValue: false }, // React Native tự escape
   returnNull: false,
+  returnEmptyString: true, // "" là bản dịch hợp lệ (vd. ko howIsBefore), không fallback sang vi
   initAsync: false, // resources nằm sẵn trong bundle → init đồng bộ, không nháy key thô
 });
 

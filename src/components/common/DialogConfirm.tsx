@@ -1,6 +1,6 @@
-import { memo } from 'react';
+import { memo, useEffect } from 'react';
 import { Modal, Pressable, StyleSheet, Text, View } from 'react-native';
-import Animated, { FadeIn, ZoomIn } from 'react-native-reanimated';
+import Animated, { useAnimatedStyle, useSharedValue, withSpring } from 'react-native-reanimated';
 
 import { AppText, Button } from '@/components/ui';
 import { useTranslation } from 'react-i18next';
@@ -33,11 +33,20 @@ function DialogConfirmBase({
   onCancel,
 }: DialogConfirmProps) {
   const { t } = useTranslation();
+  // Không dùng layout animation (entering) trong <Modal> vì không chạy trên iOS → dùng shared value.
+  const scale = useSharedValue(0.9);
+  useEffect(() => {
+    if (visible) {
+      scale.set(0.9);
+      scale.set(withSpring(1, { damping: 16, stiffness: 260 }));
+    }
+  }, [scale, visible]);
+  const cardStyle = useAnimatedStyle(() => ({ transform: [{ scale: scale.get() }] }));
   return (
     <Modal visible={visible} transparent animationType="fade" statusBarTranslucent onRequestClose={onCancel}>
-      <Animated.View entering={FadeIn.duration(180)} style={styles.backdrop}>
+      <View style={styles.backdrop}>
         <Pressable style={StyleSheet.absoluteFill} onPress={onCancel} accessibilityLabel={cancelLabel} />
-        <Animated.View entering={ZoomIn.springify().damping(18)} style={styles.card} accessibilityViewIsModal>
+        <Animated.View style={[styles.card, cardStyle]} accessibilityViewIsModal>
           {emoji ? (
             <View style={[styles.emojiWrap, destructive && styles.emojiDanger]}>
               <Text style={styles.emoji} allowFontScaling={false}>
@@ -63,7 +72,7 @@ function DialogConfirmBase({
             <Button title={cancelLabel ?? t('common.cancel')} variant="ghost" onPress={onCancel} disabled={loading} />
           </View>
         </Animated.View>
-      </Animated.View>
+      </View>
     </Modal>
   );
 }
