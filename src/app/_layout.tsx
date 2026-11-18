@@ -1,7 +1,8 @@
 import '@/i18n'; // khởi tạo i18next trước mọi component
 
 import { QueryClientProvider } from '@tanstack/react-query';
-import { type ErrorBoundaryProps, Stack } from 'expo-router';
+import { type ErrorBoundaryProps } from 'expo-router';
+import { Stack } from 'expo-router/js-stack';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
@@ -28,10 +29,15 @@ export function ErrorBoundary({ retry }: ErrorBoundaryProps) {
   );
 }
 
+/**
+ * JS stack thay cho native-stack: trên iOS mới, UINavigationBar của native-stack dù đã ẩn
+ * (headerShown: false) vẫn chặn chạm ở dải ~44pt dưới tai thỏ, phía bên phải (vùng headerRight)
+ * → nút 🌐 / 🗑 ở góc phải không bấm được. JS stack không có UINavigationBar nên không bị.
+ */
 function RootNavigator() {
   const onboardingDone = useAppStore((s) => s.onboardingDone);
   return (
-    <Stack screenOptions={{ headerShown: false, contentStyle: styles.content }}>
+    <Stack screenOptions={{ headerShown: false, cardStyle: styles.content }}>
       <Stack.Protected guard={onboardingDone}>
         <Stack.Screen name="(tabs)" />
         <Stack.Screen name="pet/[id]" options={{ animation: 'slide_from_right' }} />
