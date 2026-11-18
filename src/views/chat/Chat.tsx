@@ -1,0 +1,10 @@
+import { EmptyState, Screen } from '@/components/ui';
+import { strings } from '@/constants/strings';
+
+export default function Chat() {
+  return (
+    <Screen>
+      <EmptyState emoji="💬" title={strings.comingSoon.title} description={strings.comingSoon.body} />
+    </Screen>
+  );
+}
