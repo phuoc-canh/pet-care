@@ -33,6 +33,7 @@ function RootNavigator() {
         <Stack.Screen name="(tabs)" />
         <Stack.Screen name="pet/[id]" options={{ animation: 'slide_from_right' }} />
         <Stack.Screen name="pet/new" options={{ presentation: 'modal' }} />
+        <Stack.Screen name="appointment/book" options={{ presentation: 'modal' }} />
       </Stack.Protected>
       <Stack.Protected guard={!onboardingDone}>
         <Stack.Screen name="onboarding" options={{ animation: 'fade' }} />

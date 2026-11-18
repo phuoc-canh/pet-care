@@ -8,5 +8,6 @@ export const queryKeys = {
   appointments: {
     all: ['appointments'] as const,
     list: () => [...queryKeys.appointments.all, 'list'] as const,
+    busy: (date: string) => [...queryKeys.appointments.all, 'busy', date] as const,
   },
 } as const;
