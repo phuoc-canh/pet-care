@@ -211,7 +211,8 @@ async function callRevid(env: Env, model: string, messages: { role: string; cont
       'Content-Type': 'application/json',
       Accept: 'text/event-stream',
     },
-    body: JSON.stringify({ model, messages, stream: true, max_tokens: 500, temperature: 0.7 }),
+    // 800: model có bước suy luận (reasoning) dùng chung ngân sách token, 500 dễ bị cắt cụt.
+    body: JSON.stringify({ model, messages, stream: true, max_tokens: 800, temperature: 0.7 }),
     signal,
   });
 }

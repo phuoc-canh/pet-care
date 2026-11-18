@@ -11,8 +11,9 @@
   "routes": [{ "pattern": "api.ezio.id.vn", "custom_domain": true }],
   "workers_dev": true,
   "vars": {
-    // Đã kiểm tra qua GET /v1/models + gọi thử: gemini-flash nhanh nhất và tuân thủ system prompt.
-    "AI_MODEL": "google/gemini-flash",
-    "AI_FALLBACK_MODEL": "grok-4.5"
+    // google/gemini-flash thuộc nhóm miễn phí (chỉ 10 lượt) -> dùng model trả phí theo credit.
+    // deepseek-v4.1-flash: ~4s, tiếng Việt tốt, tuân thủ system prompt. Dự phòng: grok-4.7 (khác nhà cung cấp).
+    "AI_MODEL": "deepseek-v4.1-flash",
+    "AI_FALLBACK_MODEL": "grok-4.7"
   }
 }
