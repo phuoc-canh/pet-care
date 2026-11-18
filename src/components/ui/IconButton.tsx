@@ -1,11 +1,9 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { memo, useCallback } from 'react';
-import { StyleSheet, type StyleProp, type ViewStyle } from 'react-native';
+import { Pressable, StyleSheet, type StyleProp, type ViewStyle } from 'react-native';
 
 import { haptic } from '@/hooks/useHaptic';
-import { colors, layout, radius, shadow } from '@/theme/theme';
-
-import { PressableScale } from './PressableScale';
+import { colors, layout, motion, radius, shadow } from '@/theme/theme';
 
 export interface IconButtonProps {
   icon: keyof typeof Ionicons.glyphMap;
@@ -18,6 +16,12 @@ export interface IconButtonProps {
   style?: StyleProp<ViewStyle>;
 }
 
+/**
+ * Nút icon tròn. Cố ý dùng Pressable "trần" với style + kích thước đặt TRỰC TIẾP lên Pressable
+ * (không bọc Animated.View, không hitSlop): trên iOS kiến trúc mới, Pressable không có style
+ * bọc ngoài view có kích thước có thể bị flatten khiến vùng chạm không nhận. Kích thước 44×44
+ * đã đạt chuẩn vùng chạm nên không cần hitSlop.
+ */
 function IconButtonBase({
   icon,
   onPress,
@@ -32,26 +36,27 @@ function IconButtonBase({
     onPress();
   }, [onPress]);
 
-  const color = variant === 'primary' ? colors.white : variant === 'plain' ? colors.navy : colors.navy;
+  const color = variant === 'primary' ? colors.white : colors.navy;
 
   return (
-    <PressableScale
+    <Pressable
       onPress={handlePress}
       disabled={disabled}
-      hitSlop={layout.hitSlop}
+      collapsable={false}
       accessibilityRole="button"
       accessibilityLabel={accessibilityLabel}
       accessibilityState={{ disabled }}
-      style={[
+      style={({ pressed }) => [
         styles.base,
-        { width: size, height: size },
+        { width: Math.max(size, layout.minTouch), height: Math.max(size, layout.minTouch) },
         variantStyles[variant],
+        pressed && styles.pressed,
         disabled && styles.disabled,
         style,
       ]}
     >
       <Ionicons name={icon} size={Math.round(size * 0.5)} color={color} />
-    </PressableScale>
+    </Pressable>
   );
 }
 
@@ -59,6 +64,7 @@ export const IconButton = memo(IconButtonBase);
 
 const styles = StyleSheet.create({
   base: { borderRadius: radius.pill, alignItems: 'center', justifyContent: 'center' },
+  pressed: { opacity: 0.7, transform: [{ scale: motion.pressScale }] },
   disabled: { opacity: 0.4 },
 });
 
