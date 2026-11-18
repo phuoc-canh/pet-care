@@ -7,6 +7,9 @@
   "main": "src/index.ts",
   "compatibility_date": "2026-11-01",
   "observability": { "enabled": true },
+  // Custom domain; vẫn giữ *.workers.dev làm link dự phòng.
+  "routes": [{ "pattern": "api.ezio.id.vn", "custom_domain": true }],
+  "workers_dev": true,
   "vars": {
     // Đã kiểm tra qua GET /v1/models + gọi thử: gemini-flash nhanh nhất và tuân thủ system prompt.
     "AI_MODEL": "google/gemini-flash",
