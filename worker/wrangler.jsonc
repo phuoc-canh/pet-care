@@ -1,0 +1,15 @@
+{
+  // account_id và API token KHÔNG nằm ở đây: wrangler đọc CLOUDFLARE_ACCOUNT_ID /
+  // CLOUDFLARE_API_TOKEN từ worker/.env. REVID_API_KEY và APP_TOKEN là secret
+  // (local: .dev.vars, production: `wrangler secret put`).
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "petpal-ai-proxy",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-11-01",
+  "observability": { "enabled": true },
+  "vars": {
+    // Đã kiểm tra qua GET /v1/models + gọi thử: gemini-flash nhanh nhất và tuân thủ system prompt.
+    "AI_MODEL": "google/gemini-flash",
+    "AI_FALLBACK_MODEL": "grok-4.5"
+  }
+}
