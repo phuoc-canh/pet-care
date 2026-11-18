@@ -6,8 +6,12 @@ import { createSseParser } from '@/libs/sse';
 import type { ChatRequestBody, SendMessageParams, SendMessageResult } from '@/types/services-type/chat.type';
 import { sleep } from '@/utils/helpers';
 
-/** Tối đa 15s chờ token đầu tiên (RevidAPI thường gom câu trả lời rồi mới gửi: ~3–10s). */
-const FIRST_TOKEN_TIMEOUT_MS = 15_000;
+/**
+ * Tối đa 30s chờ token đầu tiên: worker có thể tự chuyển qua 2–3 model dự phòng
+ * (mỗi model ≤14s, tổng ≤26s) — app phải chờ lâu hơn ngân sách đó, không thì bỏ cuộc
+ * sang offline trước khi model dự phòng kịp trả lời.
+ */
+const FIRST_TOKEN_TIMEOUT_MS = 30_000;
 /** Sau khi đã có dữ liệu: stream im lặng quá 20s thì coi như treo. */
 const IDLE_TIMEOUT_MS = 20_000;
 /** Worker nhận tối đa 20 tin, mỗi tin ≤ 1000 ký tự. */

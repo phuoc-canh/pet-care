@@ -9,15 +9,17 @@
 export interface Env {
   REVID_API_KEY: string;
   APP_TOKEN: string;
-  AI_MODEL: string;
-  AI_FALLBACK_MODEL: string;
+  /** Chuỗi model theo thứ tự ưu tiên, phân tách bằng dấu phẩy. */
+  AI_MODELS: string;
 }
 
 const REVID_URL = 'https://revidapi.com/v1/chat/completions';
 const MAX_HISTORY = 20;
 const SEND_HISTORY = 10;
 const MAX_CHARS = 1000;
-const UPSTREAM_TIMEOUT_MS = 20_000;
+/** Mỗi model chờ tối đa 14s (tới khi có response headers); tổng cho cả chuỗi tối đa 26s. */
+const ATTEMPT_TIMEOUT_MS = 14_000;
+const TOTAL_BUDGET_MS = 26_000;
 const RATE_LIMIT = 20;
 const RATE_WINDOW_MS = 60_000;
 
@@ -283,48 +285,68 @@ async function handleChat(request: Request, env: Env): Promise<Response> {
     ...parsed.messages.slice(-SEND_HISTORY),
   ];
 
-  // Timeout 20s cho tới khi nhận được response headers; client hủy request → hủy luôn upstream.
-  const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort('timeout'), UPSTREAM_TIMEOUT_MS);
-  const onClientAbort = () => controller.abort('client');
-  request.signal.addEventListener('abort', onClientAbort);
+  const models = parseModels(env);
+  if (models.length === 0) return fail(500, 'MISCONFIGURED', 'Worker chưa cấu hình AI_MODELS');
 
-  try {
-    let model = env.AI_MODEL;
-    let res = await callRevid(env, model, upstreamMessages, controller.signal);
+  const started = Date.now();
+  let lastStatus = 502;
+  let lastWasTimeout = false;
 
-    // 404 (model không còn) / 503 (nhà cung cấp lỗi) → thử lại 1 lần với model dự phòng.
-    // Không retry 401/402: có retry cũng vẫn lỗi và tốn credit.
-    if ((res.status === 404 || res.status === 503) && env.AI_FALLBACK_MODEL && env.AI_FALLBACK_MODEL !== model) {
-      console.log(`upstream ${res.status} on ${model}, retrying with fallback`);
-      await res.body?.cancel();
-      model = env.AI_FALLBACK_MODEL;
-      res = await callRevid(env, model, upstreamMessages, controller.signal);
-    }
-    clearTimeout(timer);
+  for (const [index, model] of models.entries()) {
+    const remaining = TOTAL_BUDGET_MS - (Date.now() - started);
+    if (remaining < 2_000) break;
+    if (request.signal.aborted) return fail(499, 'UPSTREAM_ERROR', 'Client đã hủy');
 
-    if (!res.ok || !res.body) {
-      console.log(`upstream error ${res.status} (${model})`);
-      await res.body?.cancel();
-      return upstreamError(res.status);
-    }
+    // Mỗi lần thử có controller + timeout riêng; client hủy → hủy luôn upstream.
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort('timeout'), Math.min(ATTEMPT_TIMEOUT_MS, remaining));
+    const onClientAbort = () => controller.abort('client');
+    request.signal.addEventListener('abort', onClientAbort);
 
-    const headers = { ...CORS_HEADERS, ...SSE_HEADERS, 'X-AI-Model': model };
-    const contentType = res.headers.get('Content-Type') ?? '';
-    if (contentType.includes('application/json')) {
-      return new Response(jsonToSse(await res.json()), { headers });
+    try {
+      const res = await callRevid(env, model, upstreamMessages, controller.signal);
+      clearTimeout(timer);
+
+      if (res.ok && res.body) {
+        const headers = { ...CORS_HEADERS, ...SSE_HEADERS, 'X-AI-Model': model, 'X-AI-Attempt': String(index + 1) };
+        if (index > 0) console.log(`served by fallback model ${model} (attempt ${index + 1})`);
+        if ((res.headers.get('Content-Type') ?? '').includes('application/json')) {
+          return new Response(jsonToSse(await res.json()), { headers });
+        }
+        return new Response(res.body, { headers });
+      }
+
+      const detail = (await res.text().catch(() => '')).slice(0, 300);
+      console.log(`model ${model} failed: ${res.status} ${detail.slice(0, 120)}`);
+      lastStatus = res.status;
+      lastWasTimeout = false;
+      if (!shouldTryNextModel(res.status)) return upstreamError(res.status);
+    } catch (err) {
+      clearTimeout(timer);
+      if (controller.signal.reason === 'client') return fail(499, 'UPSTREAM_ERROR', 'Client đã hủy');
+      lastWasTimeout = controller.signal.reason === 'timeout';
+      lastStatus = 502;
+      console.log(`model ${model} ${lastWasTimeout ? 'timed out' : 'fetch failed'}`, err instanceof Error ? err.message : '');
+    } finally {
+      request.signal.removeEventListener('abort', onClientAbort);
     }
-    return new Response(res.body, { headers });
-  } catch (err) {
-    clearTimeout(timer);
-    if (controller.signal.aborted && controller.signal.reason === 'timeout') {
-      return fail(504, 'TIMEOUT', 'AI phản hồi quá lâu');
-    }
-    console.log('upstream fetch failed', err instanceof Error ? err.message : 'unknown');
-    return fail(502, 'UPSTREAM_ERROR', 'AI tạm lỗi, thử lại sau');
-  } finally {
-    request.signal.removeEventListener('abort', onClientAbort);
   }
+
+  return lastWasTimeout ? fail(504, 'TIMEOUT', 'AI phản hồi quá lâu') : upstreamError(lastStatus);
+}
+
+/** "a, b ,a" → ["a","b"] */
+function parseModels(env: Env): string[] {
+  return Array.from(new Set((env.AI_MODELS ?? '').split(',').map((m) => m.trim()).filter(Boolean)));
+}
+
+/**
+ * Có nên thử model kế tiếp không? Chỉ dùng model trả phí (credit), nên:
+ * - 404 (model không còn bán), 408, 5xx (nhà cung cấp lỗi) → có
+ * - 402 hết credit, 429 (giới hạn theo TÀI KHOẢN), 400/401 → không: đổi model cũng vô ích, chỉ tốn lượt
+ */
+function shouldTryNextModel(status: number): boolean {
+  return status === 404 || status === 408 || status >= 500;
 }
 
 export default {
@@ -334,7 +356,8 @@ export default {
     if (request.method === 'OPTIONS') return new Response(null, { status: 204, headers: CORS_HEADERS });
 
     if (url.pathname === '/health' && request.method === 'GET') {
-      return json({ ok: true, model: env.AI_MODEL });
+      const models = parseModels(env);
+      return json({ ok: true, model: models[0] ?? null, models });
     }
 
     if (url.pathname === '/chat') {

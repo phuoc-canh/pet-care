@@ -146,7 +146,7 @@ FlatList với `keyExtractor` ổn định, item `React.memo`, callback `useCall
 
 - **API key chỉ nằm ở Worker** (Cloudflare secret). Mọi thứ trong bundle app — kể cả biến `EXPO_PUBLIC_*` — đều giải nén được từ APK/IPA, nên client **không giữ secret nào**.
 - Worker là nơi kiểm soát: kiểm tra `x-app-token` (so sánh thời gian hằng), **rate limit 20 request/phút/IP**, validate input (≤ 20 tin, ≤ 1000 ký tự/tin, hồ sơ hợp lệ), dựng system prompt phía server, timeout 20s, chuẩn hóa lỗi `{ error, code }` mà không lộ chi tiết upstream.
-- Model đặt qua `vars` → đổi model/nhà cung cấp không cần phát hành lại app. Lỗi 404/503 thì thử lại một lần với model dự phòng; không retry 401/402.
+- **Chuỗi model tự chuyển** (`AI_MODELS` trong `vars`, chỉ model trả phí): `deepseek-v4.1-flash → gpt-5.6-luna → grok-4.7`. Model đang dùng lỗi 404 / 5xx / timeout (mỗi model ≤ 14s, cả chuỗi ≤ 26s) thì worker tự thử model kế tiếp; header `X-AI-Model`, `X-AI-Attempt` cho biết model nào đã trả lời. **Không** chuyển khi 402 (hết credit), 429 (giới hạn theo tài khoản) hay 400/401 — đổi model cũng vô ích, chỉ tốn lượt. App chờ token đầu tối đa 30s để kịp nhận câu trả lời từ model dự phòng. Đổi thứ tự/model không cần sửa code hay phát hành lại app.
 - **Giới hạn hiện tại**: `APP_TOKEN` chỉ là lớp chặn tối thiểu cho demo (nó cũng nằm trong bundle), rate limit dùng `Map` trong memory theo isolate.
 - **Hướng production**: đăng nhập người dùng → **JWT ngắn hạn** (access + refresh), Worker verify chữ ký thay cho `APP_TOKEN`; rate limit/quota **theo user** bằng Cloudflare Rate Limiting hoặc Durable Objects; App Attest / Play Integrity chống client giả; lưu hồ sơ và lịch sử chat ở backend.
 - Repo không chứa secret: `.env`, `worker/.env`, `worker/.dev.vars`, `worker/.wrangler/` đều nằm trong `.gitignore`; `wrangler.jsonc` không có `account_id`.
@@ -199,7 +199,7 @@ npx wrangler deploy
 
 | Endpoint | Mô tả |
 |---|---|
-| `GET /health` | `{ ok: true, model }` |
+| `GET /health` | `{ ok: true, model, models }` (model chính + chuỗi dự phòng) |
 | `POST /chat` | Header `x-app-token`, body `{ lang, pet, messages }` → SSE định dạng OpenAI (`data: {...}` … `data: [DONE]`) |
 
 <details>
@@ -210,8 +210,9 @@ npx wrangler deploy
 | `claude-haiku-4-5` | 4.5s | ❌ Qua RevidAPI bị bọc system prompt riêng, bỏ qua prompt của app |
 | `claude-haiku-5-5` | 3.6s | ❌ Cùng vấn đề như trên |
 | `google/gemini-flash` | 3.3s | ⚠️ Chất lượng tốt nhưng thuộc **free tier (10 lượt)** → hết lượt trả `402 free_tier_exhausted` dù tài khoản còn credit |
-| **`deepseek-v4.1-flash`** | **~4s** | ✅ Model trả phí, nhanh, đúng vai Pal, tốt cả vi/en/ko, stream thật → `AI_MODEL` (`max_tokens` 800 vì có bước suy luận) |
-| `grok-4.7` | ~10s | ✅ Đủ ý nhưng chậm → `AI_FALLBACK_MODEL` (khác nhà cung cấp) |
+| **`deepseek-v4.1-flash`** | **~4s** | ✅ Model trả phí, nhanh, đúng vai Pal, tốt cả vi/en/ko, stream thật → **model chính** (`max_tokens` 800 vì có bước suy luận) |
+| `gpt-5.6-luna` | ~4s | ✅ Nhanh, tốt → **dự phòng 1** (khác nhà cung cấp) |
+| `grok-4.7` | ~5–10s | ✅ Đủ ý → **dự phòng 2** |
 | `gpt-6-luna` | ~10s | ✅ Tốt nhưng chậm |
 
 </details>
